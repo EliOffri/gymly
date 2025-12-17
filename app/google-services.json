@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1005061577492",
+    "project_id": "trainingcoach-1397d",
+    "storage_bucket": "trainingcoach-1397d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1005061577492:android:bee8b40f9dd9e43e1fc001",
+        "android_client_info": {
+          "package_name": "com.project.trainingcoach"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvUo7UHFaBalsFu4tFDZaeg6PEc2qYTSY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
