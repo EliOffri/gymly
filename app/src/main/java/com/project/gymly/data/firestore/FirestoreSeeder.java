@@ -1,14 +1,9 @@
-package com.project.trainingcoach;
+// app/src/main/java/com/project/gymly/data/firestore/FirestoreSeeder.java
+package com.project.gymly.data.firestore;
 
+import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.util.Log;
-
-import androidx.activity.ComponentActivity;
-import androidx.activity.EdgeToEdge;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FieldValue;
@@ -20,31 +15,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MainActivity extends ComponentActivity {
+public final class FirestoreSeeder {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_main);
+    private static final String TAG = "FirestoreSeeder";
+    private static final String PREFS_NAME = "app_prefs";
+    private static final String PREF_KEY_SEED_DONE = "seed_done_v1";
 
-        // Keep existing edge-to-edge behavior
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    // Prevent instantiation
+    private FirestoreSeeder() { }
 
-        // Seed Firestore data once (exercise library, motivation messages, plans, logs)
-        seedFirestoreIfNeeded();
-    }
+    /**
+     * Public entry point – seeds Firestore only once per install.
+     * Called from MainActivity.onCreate().
+     */
+    public static void seedIfNeeded(Context context) {
+        SharedPreferences prefs =
+                context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-    // Entry point for seeding Firestore, runs only once per install
-    private void seedFirestoreIfNeeded() {
-        SharedPreferences prefs = getSharedPreferences("app_prefs", MODE_PRIVATE);
-        boolean alreadySeeded = prefs.getBoolean("seed_done_v1", false);
+        boolean alreadySeeded = prefs.getBoolean(PREF_KEY_SEED_DONE, false);
         if (alreadySeeded) {
-            Log.d("SEED", "Already seeded, skipping");
+            Log.d(TAG, "Already seeded, skipping");
             return;
         }
 
@@ -53,28 +43,30 @@ public class MainActivity extends ComponentActivity {
         // 1) Seed demo users (must exist before we create their plans)
         seedUsers(db);
 
-        // Use the user document IDs you already created in Firestore
+        // 2) User IDs used in the weekly plans and logs
         String[] userIds = new String[] {
                 "eliUser",
                 "ofirUser"
         };
 
-        // Global data (shared for all users)
+        // 3) Global data (shared by all users)
         seedExerciseLibrary(db);
         seedMotivationMessages(db);
 
-        // User-specific data
+        // 4) User-specific data: weekly plans + sample workout history
         for (String uid : userIds) {
             seedWeeklyPlanForUser(db, uid);
             seedCompletedWorkoutsForUser(db, uid);
         }
 
-        prefs.edit().putBoolean("seed_done_v1", true).apply();
-        Log.d("SEED", "Seeding finished");
+        prefs.edit().putBoolean(PREF_KEY_SEED_DONE, true).apply();
+        Log.d(TAG, "Seeding finished");
     }
 
-    // Seed the users collection with two demo users: ofirUser and eliUser
-    private void seedUsers(FirebaseFirestore db) {
+    /**
+     * Seed the "users" collection with two demo users: ofirUser and eliUser.
+     */
+    private static void seedUsers(FirebaseFirestore db) {
         CollectionReference usersCol = db.collection("users");
 
         // ----- Ofir user -----
@@ -85,7 +77,6 @@ public class MainActivity extends ComponentActivity {
         ofir.put("goals", Arrays.asList("weight_loss", "tone", "general_fitness"));
         ofir.put("equipment", Arrays.asList("mat", "resistance_band", "treadmill"));
 
-        // Schedule in minutes per day (as you defined in Firestore)
         Map<String, Object> ofirSchedule = new HashMap<>();
         ofirSchedule.put("sun", 45);
         ofirSchedule.put("mon", 0);
@@ -99,12 +90,12 @@ public class MainActivity extends ComponentActivity {
         ofir.put("createdAt", FieldValue.serverTimestamp());
 
         usersCol.document("ofirUser").set(ofir)
-                .addOnSuccessListener(aVoid -> Log.d("SEED", "User ofirUser seeded"))
-                .addOnFailureListener(e -> Log.e("SEED", "Error seeding user ofirUser", e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "User ofirUser seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding user ofirUser", e));
 
         // ----- Eli user -----
         Map<String, Object> eli = new HashMap<>();
-        eli.put("name", "eli");
+        eli.put("name", "Eli");
         eli.put("email", "eli@gmail.com");
         eli.put("level", "intermediate");
         eli.put("goals", Arrays.asList("strength", "flexibility"));
@@ -123,12 +114,14 @@ public class MainActivity extends ComponentActivity {
         eli.put("createdAt", FieldValue.serverTimestamp());
 
         usersCol.document("eliUser").set(eli)
-                .addOnSuccessListener(aVoid -> Log.d("SEED", "User eliUser seeded"))
-                .addOnFailureListener(e -> Log.e("SEED", "Error seeding user eliUser", e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "User eliUser seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding user eliUser", e));
     }
 
-    // Create the exerciseLibrary collection with predefined exercises
-    private void seedExerciseLibrary(FirebaseFirestore db) {
+    /**
+     * Seed the "exerciseLibrary" collection with predefined exercises.
+     */
+    private static void seedExerciseLibrary(FirebaseFirestore db) {
         List<Map<String, Object>> exercises = Arrays.asList(
                 createExercise("pushups_basic", "Push-ups",
                         "Standard floor push-ups",
@@ -183,7 +176,6 @@ public class MainActivity extends ComponentActivity {
         WriteBatch batch = db.batch();
         CollectionReference colRef = db.collection("exerciseLibrary");
 
-        // Use batch writes for better performance and atomic commit
         for (Map<String, Object> ex : exercises) {
             String id = (String) ex.get("id");
             Map<String, Object> data = new HashMap<>(ex);
@@ -192,18 +184,20 @@ public class MainActivity extends ComponentActivity {
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> Log.d("SEED", "exerciseLibrary seeded"))
-                .addOnFailureListener(e -> Log.e("SEED", "Error seeding exerciseLibrary", e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "exerciseLibrary seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding exerciseLibrary", e));
     }
 
-    // Helper method to build a single exercise map
-    private Map<String, Object> createExercise(String id,
-                                               String name,
-                                               String description,
-                                               int duration,
-                                               String muscleGroup,
-                                               int difficulty,
-                                               List<String> equipmentRequired) {
+    /**
+     * Helper method to build a single exercise map.
+     */
+    private static Map<String, Object> createExercise(String id,
+                                                      String name,
+                                                      String description,
+                                                      int duration,
+                                                      String muscleGroup,
+                                                      int difficulty,
+                                                      List<String> equipmentRequired) {
         Map<String, Object> map = new HashMap<>();
         map.put("id", id);
         map.put("name", name);
@@ -216,8 +210,10 @@ public class MainActivity extends ComponentActivity {
         return map;
     }
 
-    // Create motivationMessages collection with static motivation texts
-    private void seedMotivationMessages(FirebaseFirestore db) {
+    /**
+     * Seed the "motivationMessages" collection with static messages.
+     */
+    private static void seedMotivationMessages(FirebaseFirestore db) {
         CollectionReference colRef = db.collection("motivationMessages");
         WriteBatch batch = db.batch();
 
@@ -242,85 +238,60 @@ public class MainActivity extends ComponentActivity {
         batch.set(colRef.document("msg4"), msg4);
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> Log.d("SEED", "motivationMessages seeded"))
-                .addOnFailureListener(e -> Log.e("SEED", "Error seeding motivationMessages", e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "motivationMessages seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding motivationMessages", e));
     }
 
-    // Create weeklyPlans document for a specific user, customized by their profile
-    private void seedWeeklyPlanForUser(FirebaseFirestore db, String uid) {
+    /**
+     * Seed the "weeklyPlans/{uid}" document for a specific user,
+     * customized based on their profile.
+     */
+    private static void seedWeeklyPlanForUser(FirebaseFirestore db, String uid) {
         Map<String, Object> data = new HashMap<>();
 
         if ("ofirUser".equals(uid)) {
-            // Ofir:
-            // level: beginner
-            // goals: weight_loss, tone, general_fitness
-            // equipment: mat, resistance_band, treadmill
-            // schedule: sun = 45, wed = 45, others = 0
-
-            // Sunday: more cardio and fat-burning focus
+            // Beginner, weight loss + tone, mat/band/treadmill
             data.put("sun", Arrays.asList(
-                    "treadmill_walk",    // main cardio on treadmill
-                    "jumping_jacks",     // light cardio warmup
-                    "mountain_climbers"  // cardio + core
+                    "treadmill_walk",
+                    "jumping_jacks",
+                    "mountain_climbers"
             ));
-
-            // No workouts on Monday and Tuesday
             data.put("mon", Arrays.asList());
             data.put("tue", Arrays.asList());
-
-            // Wednesday: strength + tone with simple bodyweight and mat
             data.put("wed", Arrays.asList(
-                    "squats_bodyweight", // legs + tone
-                    "glute_bridge",      // glutes on mat
-                    "plank_basic",       // core
-                    "dead_bug_core"      // core stability
+                    "squats_bodyweight",
+                    "glute_bridge",
+                    "plank_basic",
+                    "dead_bug_core"
             ));
-
-            // No workouts on Thursday, Friday, Saturday
             data.put("thu", Arrays.asList());
             data.put("fri", Arrays.asList());
             data.put("sat", Arrays.asList());
 
         } else if ("eliUser".equals(uid)) {
-            // Eli:
-            // level: intermediate
-            // goals: strength, flexibility
-            // equipment: dumbbells, bench, kettlebell
-            // schedule: sun = 45, tue = 45, thu = 45, others = 0
-
-            // Sunday: upper-body strength focus
+            // Intermediate, strength + flexibility, dumbbells/bench/kettlebell
             data.put("sun", Arrays.asList(
-                    "jumping_jacks",           // short warmup
-                    "bicep_curl_dumbbells",    // arms strength
-                    "shoulder_press_dumbbells" // shoulders strength
+                    "jumping_jacks",
+                    "bicep_curl_dumbbells",
+                    "shoulder_press_dumbbells"
             ));
-
-            // Monday: no workout
             data.put("mon", Arrays.asList());
-
-            // Tuesday: lower body strength
             data.put("tue", Arrays.asList(
-                    "squats_bodyweight",       // legs
-                    "lunges_forward",          // legs + balance
-                    "glute_bridge"             // posterior chain
+                    "squats_bodyweight",
+                    "lunges_forward",
+                    "glute_bridge"
             ));
-
-            // Wednesday: no workout
             data.put("wed", Arrays.asList());
-
-            // Thursday: core + triceps to support strength and stability
             data.put("thu", Arrays.asList(
-                    "dead_bug_core",           // core stability
-                    "plank_basic",             // core strength
-                    "tricep_dips_chair"        // triceps using bench
+                    "dead_bug_core",
+                    "plank_basic",
+                    "tricep_dips_chair"
             ));
-
-            // Friday, Saturday: rest
             data.put("fri", Arrays.asList());
             data.put("sat", Arrays.asList());
 
         } else {
-            // Fallback plan for any other user
+            // Fallback plan
             data.put("sun", Arrays.asList("jumping_jacks", "squats_bodyweight", "plank_basic"));
             data.put("mon", Arrays.asList());
             data.put("tue", Arrays.asList("jumping_jacks", "lunges_forward", "dead_bug_core"));
@@ -330,18 +301,19 @@ public class MainActivity extends ComponentActivity {
             data.put("sat", Arrays.asList("glute_bridge", "plank_basic", "dead_bug_core"));
         }
 
-        // Timestamp for when the plan was generated
         data.put("planGeneratedAt", FieldValue.serverTimestamp());
 
         db.collection("weeklyPlans")
                 .document(uid)
                 .set(data)
-                .addOnSuccessListener(aVoid -> Log.d("SEED", "weeklyPlans seeded for " + uid))
-                .addOnFailureListener(e -> Log.e("SEED", "Error seeding weeklyPlans for " + uid, e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "weeklyPlans seeded for " + uid))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding weeklyPlans for " + uid, e));
     }
 
-    // Create completedWorkouts logs for a specific user (sample history)
-    private void seedCompletedWorkoutsForUser(FirebaseFirestore db, String uid) {
+    /**
+     * Seed sample "completedWorkouts/{uid}/logs" history.
+     */
+    private static void seedCompletedWorkoutsForUser(FirebaseFirestore db, String uid) {
         CollectionReference logsCol = db.collection("completedWorkouts")
                 .document(uid)
                 .collection("logs");

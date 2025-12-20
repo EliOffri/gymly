@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1005061577492",
-    "project_id": "trainingcoach-1397d",
-    "storage_bucket": "trainingcoach-1397d.firebasestorage.app"
+    "project_number": "884628303120",
+    "project_id": "gymly-c9efb",
+    "storage_bucket": "gymly-c9efb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1005061577492:android:bee8b40f9dd9e43e1fc001",
+        "mobilesdk_app_id": "1:884628303120:android:aca624bf24b975e2970995",
         "android_client_info": {
-          "package_name": "com.project.trainingcoach"
+          "package_name": "com.project.gymly"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAvUo7UHFaBalsFu4tFDZaeg6PEc2qYTSY"
+          "current_key": "AIzaSyBKO4n-4NIMkUCCw1W5Uk68iHuda2A3814"
         }
       ],
       "services": {
