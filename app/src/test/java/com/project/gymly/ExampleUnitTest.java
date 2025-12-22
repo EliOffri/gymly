@@ -1,4 +1,4 @@
-package com.example.gymly;
+package com.project.gymly;
 
 import org.junit.Test;
 

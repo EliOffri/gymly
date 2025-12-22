@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Gymly"
-include(":app")
- 
+include ':app'
