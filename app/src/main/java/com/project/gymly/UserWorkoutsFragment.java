@@ -1,0 +1,102 @@
+package com.project.gymly;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.project.gymly.adapters.UserWorkoutsAdapter;
+import com.project.gymly.models.WorkoutDay;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class UserWorkoutsFragment extends Fragment {
+
+    private RecyclerView rvUserWorkouts;
+    private ProgressBar progressBar;
+    private FirebaseFirestore db;
+    private String userId;
+
+    public UserWorkoutsFragment() {
+        // Required empty public constructor
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_user_workouts, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        db = FirebaseFirestore.getInstance();
+        
+        rvUserWorkouts = view.findViewById(R.id.rv_user_workouts);
+        progressBar = view.findViewById(R.id.progressBar);
+
+        rvUserWorkouts.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Retrieve current user ID from SharedPreferences
+        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
+        userId = prefs.getString("current_user_id", null);
+
+        if (userId != null) {
+            fetchUserWorkouts(userId);
+        } else {
+            Toast.makeText(getContext(), "No user logged in", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void fetchUserWorkouts(String uid) {
+        progressBar.setVisibility(View.VISIBLE);
+
+        db.collection("weeklyPlans").document(uid).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (documentSnapshot.exists()) {
+                        List<WorkoutDay> workoutDays = parseWorkoutPlan(documentSnapshot);
+                        UserWorkoutsAdapter adapter = new UserWorkoutsAdapter(workoutDays);
+                        rvUserWorkouts.setAdapter(adapter);
+                    } else {
+                        Toast.makeText(getContext(), "No workout plan found for this user.", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "Error fetching workouts: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    private List<WorkoutDay> parseWorkoutPlan(DocumentSnapshot document) {
+        List<WorkoutDay> days = new ArrayList<>();
+        List<String> dayNames = Arrays.asList("sun", "mon", "tue", "wed", "thu", "fri", "sat");
+
+        for (String day : dayNames) {
+            Object data = document.get(day);
+            List<String> exercises = new ArrayList<>();
+            if (data instanceof List) {
+                exercises = (List<String>) data;
+            }
+            days.add(new WorkoutDay(day, exercises));
+        }
+        return days;
+    }
+}

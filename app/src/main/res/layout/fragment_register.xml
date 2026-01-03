@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="64dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register New User"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Name -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Name">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Email -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Email"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textEmailAddress"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Level -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fitness Level"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <Spinner
+            android:id="@+id/spinner_level"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp" />
+
+        <!-- Goals -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Goals"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <CheckBox android:id="@+id/cb_goal_weight_loss" android:text="Weight Loss" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_strength" android:text="Strength" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_flexibility" android:text="Flexibility" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_tone" android:text="Tone" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_general_fitness" android:text="General Fitness" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <!-- Equipment -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Equipment"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <CheckBox android:id="@+id/cb_eq_dumbbells" android:text="Dumbbells" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_bench" android:text="Bench" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_kettlebell" android:text="Kettlebell" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_mat" android:text="Mat" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_treadmill" android:text="Treadmill" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_resistance_band" android:text="Resistance Band" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <!-- Schedule -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Schedule (Minutes per day)"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp">
+            <!-- Sunday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Sunday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_sun" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Monday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Monday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_mon" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Tuesday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Tuesday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_tue" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Wednesday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Wednesday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_wed" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Thursday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Thursday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_thu" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Friday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Friday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_fri" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+            <!-- Saturday -->
+            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+                <TextView android:text="Saturday" android:layout_width="100dp" android:layout_height="wrap_content"/>
+                <EditText android:id="@+id/et_sat" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_submit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Submit Registration"
+            android:layout_marginTop="32dp"/>
+
+    </LinearLayout>
+</ScrollView>

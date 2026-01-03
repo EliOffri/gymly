@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="64dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit Profile Details"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Level -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fitness Level"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <Spinner
+            android:id="@+id/spinner_level"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp" />
+
+        <!-- Goals -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Goals"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <CheckBox android:id="@+id/cb_goal_weight_loss" android:text="Weight Loss" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_strength" android:text="Strength" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_flexibility" android:text="Flexibility" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_tone" android:text="Tone" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_goal_general_fitness" android:text="General Fitness" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <!-- Equipment -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Equipment"
+            android:layout_marginTop="24dp"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+        
+        <CheckBox android:id="@+id/cb_eq_dumbbells" android:text="Dumbbells" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_bench" android:text="Bench" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_kettlebell" android:text="Kettlebell" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_mat" android:text="Mat" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_treadmill" android:text="Treadmill" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <CheckBox android:id="@+id/cb_eq_resistance_band" android:text="Resistance Band" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <Button
+            android:id="@+id/btn_save_changes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save Changes"
+            android:layout_marginTop="32dp"/>
+
+    </LinearLayout>
+</ScrollView>
