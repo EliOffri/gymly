@@ -63,9 +63,13 @@ public class ProfileFragment extends Fragment {
 
         btnLogout.setOnClickListener(v -> {
             userRepository.signOut();
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new HomeFragment())
-                    .commit();
+            if (getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.showBottomNav(false);
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new LoginFragment())
+                        .commit();
+            }
         });
     }
 

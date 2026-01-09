@@ -11,14 +11,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.project.gymly.R;
 import com.project.gymly.models.WorkoutDay;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserWorkoutsAdapter extends RecyclerView.Adapter<UserWorkoutsAdapter.WorkoutViewHolder> {
 
-    private final List<WorkoutDay> workoutDays;
+    private List<WorkoutDay> workoutDays;
 
     public UserWorkoutsAdapter(List<WorkoutDay> workoutDays) {
-        this.workoutDays = workoutDays;
+        this.workoutDays = new ArrayList<>(workoutDays);
     }
 
     @NonNull
@@ -39,6 +40,11 @@ public class UserWorkoutsAdapter extends RecyclerView.Adapter<UserWorkoutsAdapte
         return workoutDays.size();
     }
 
+    public void updateData(List<WorkoutDay> newList) {
+        this.workoutDays = new ArrayList<>(newList);
+        notifyDataSetChanged();
+    }
+
     static class WorkoutViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvDayName;
         private final TextView tvExercisesList;
@@ -50,7 +56,7 @@ public class UserWorkoutsAdapter extends RecyclerView.Adapter<UserWorkoutsAdapte
         }
 
         public void bind(WorkoutDay workoutDay) {
-            tvDayName.setText(capitalize(workoutDay.getDayName()));
+            tvDayName.setText(workoutDay.getDayName().toUpperCase());
             List<String> exercises = workoutDay.getExercises();
             if (exercises == null || exercises.isEmpty()) {
                 tvExercisesList.setText("Rest Day");
@@ -58,15 +64,16 @@ public class UserWorkoutsAdapter extends RecyclerView.Adapter<UserWorkoutsAdapte
                 StringBuilder sb = new StringBuilder();
                 for (String ex : exercises) {
                     if (sb.length() > 0) sb.append("\n");
-                    sb.append("• ").append(ex.replace("_", " "));
+                    sb.append("• ").append(formatExerciseName(ex));
                 }
                 tvExercisesList.setText(sb.toString());
             }
         }
-        
-        private String capitalize(String str) {
-            if (str == null || str.isEmpty()) return str;
-            return str.substring(0, 1).toUpperCase() + str.substring(1);
+
+        private String formatExerciseName(String name) {
+            if (name == null || name.isEmpty()) return "";
+            String formatted = name.replace("_", " ");
+            return formatted.substring(0, 1).toUpperCase() + formatted.substring(1);
         }
     }
 }

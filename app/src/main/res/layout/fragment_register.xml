@@ -1,247 +1,210 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
+    <!-- Header -->
+    <RelativeLayout
+        android:id="@+id/registration_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingBottom="64dp">
+        android:padding="16dp"
+        android:elevation="4dp"
+        android:background="?android:attr/windowBackground">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Register New User"
-            android:textSize="24sp"
+            android:text="Create Account"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="24dp"/>
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
 
-        <!-- Name -->
-        <com.google.android.material.textfield.TextInputLayout
+    <ScrollView
+        android:id="@+id/registration_scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/submit_container"
+        android:layout_below="@id/registration_header"
+        android:padding="16dp"
+        android:clipToPadding="false">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Name">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_name"
+            android:orientation="vertical"
+            android:paddingBottom="24dp">
+
+            <!-- Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPersonName"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="Name"
+                app:startIconDrawable="@android:drawable/ic_menu_edit"
+                app:errorEnabled="true">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Email -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Email"
-            android:layout_marginTop="12dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_email"
+            <!-- Email -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textEmailAddress"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="Email"
+                android:layout_marginTop="8dp"
+                app:startIconDrawable="@android:drawable/ic_dialog_email"
+                app:errorEnabled="true">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textEmailAddress"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Password -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_password"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Password"
-            app:passwordToggleEnabled="true"
-            android:layout_marginTop="12dp">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_password"
+            <!-- Password -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"/>
-        </com.google.android.material.textfield.TextInputLayout>
+                android:hint="Password"
+                app:passwordToggleEnabled="true"
+                android:layout_marginTop="8dp"
+                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+                app:errorEnabled="true">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Level -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Fitness Level"
-            android:layout_marginTop="24dp"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
-        
-        <Spinner
-            android:id="@+id/spinner_level"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:minHeight="48dp" />
-
-        <!-- Goals -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Goals"
-            android:layout_marginTop="24dp"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_goals"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:selectionRequired="false"
-            app:singleSelection="false">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_goal_weight_loss"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+            <!-- Level -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Weight Loss" />
+                android:text="Fitness Level"
+                android:layout_marginTop="16dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_goal_strength"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+            <Spinner
+                android:id="@+id/spinner_level"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:minHeight="48dp" />
+
+            <!-- Goals -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Strength" />
+                android:text="Your Goals"
+                android:layout_marginTop="24dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_goal_flexibility"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_goals"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                <com.google.android.material.chip.Chip id="@+id/chip_goal_weight_loss" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Weight Loss" />
+                <com.google.android.material.chip.Chip id="@+id/chip_goal_strength" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Strength" />
+                <com.google.android.material.chip.Chip id="@+id/chip_goal_flexibility" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flexibility" />
+                <com.google.android.material.chip.Chip id="@+id/chip_goal_tone" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tone" />
+                <com.google.android.material.chip.Chip id="@+id/chip_goal_general_fitness" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="General Fitness" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Equipment -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Flexibility" />
+                android:text="Available Equipment"
+                android:layout_marginTop="24dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_goal_tone"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_equipment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_dumbbells" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dumbbells" />
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_bench" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bench" />
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_kettlebell" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kettlebell" />
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_mat" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mat" />
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_treadmill" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Treadmill" />
+                <com.google.android.material.chip.Chip id="@+id/chip_eq_resistance_band" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Resistance Band" />
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Schedule -->
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tone" />
+                android:text="Workout Schedule"
+                android:layout_marginTop="24dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary"/>
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_goal_general_fitness"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="General Fitness" />
-        </com.google.android.material.chip.ChipGroup>
+                android:text="Select minutes available per day"
+                android:textSize="12sp"
+                android:layout_marginBottom="16dp"/>
 
-        <!-- Equipment -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Equipment"
-            android:layout_marginTop="24dp"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
-
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_equipment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            app:selectionRequired="false"
-            app:singleSelection="false">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_dumbbells"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/schedule_container"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Dumbbells" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_bench"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Bench" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_kettlebell"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Kettlebell" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_mat"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Mat" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_treadmill"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Treadmill" />
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_eq_resistance_band"
-                style="@style/Widget.MaterialComponents.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Resistance Band" />
-        </com.google.android.material.chip.ChipGroup>
-
-        <!-- Schedule -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Schedule (Minutes per day)"
-            android:layout_marginTop="24dp"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
-        
-        <LinearLayout android:orientation="vertical" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp">
-            <!-- Sunday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Sunday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_sun" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+                android:orientation="vertical">
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_sun" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_mon" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_tue" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_wed" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_thu" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_fri" />
+                <include layout="@layout/item_day_slider" android:id="@+id/layout_sat" />
             </LinearLayout>
-            <!-- Monday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Monday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_mon" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <!-- Tuesday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Tuesday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_tue" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <!-- Wednesday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Wednesday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_wed" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <!-- Thursday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Thursday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_thu" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <!-- Friday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Friday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_fri" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
-            <!-- Saturday -->
-            <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
-                <TextView android:text="Saturday" android:layout_width="100dp" android:layout_height="wrap_content"/>
-                <EditText android:id="@+id/et_sat" android:text="0" android:inputType="number" android:layout_width="match_parent" android:layout_height="wrap_content"/>
-            </LinearLayout>
+
         </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Submit Button Container -->
+    <FrameLayout
+        android:id="@+id/submit_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:elevation="8dp"
+        android:background="?android:attr/windowBackground">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_submit"
+            android:id="@+id/btn_register_submit"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
             android:text="Submit Registration"
-            android:layout_marginTop="32dp"/>
+            android:textSize="16sp"
+            app:cornerRadius="8dp"/>
 
-    </LinearLayout>
-</ScrollView>
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+    </FrameLayout>
+
+</RelativeLayout>

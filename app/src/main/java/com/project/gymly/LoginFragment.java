@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -16,8 +17,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 import com.project.gymly.data.UserRepository;
 
 public class LoginFragment extends Fragment {
@@ -25,6 +24,7 @@ public class LoginFragment extends Fragment {
     private TextInputLayout tilEmail, tilPassword;
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
+    private TextView tvGoToRegister;
     private ProgressBar progressBar;
     private UserRepository userRepository;
 
@@ -49,30 +49,25 @@ public class LoginFragment extends Fragment {
         tilPassword = view.findViewById(R.id.til_login_password);
         etPassword = view.findViewById(R.id.et_login_password);
         btnLogin = view.findViewById(R.id.btn_perform_login);
+        tvGoToRegister = view.findViewById(R.id.tv_go_to_register);
         progressBar = view.findViewById(R.id.progressBar);
 
         btnLogin.setOnClickListener(v -> performLogin());
+        
+        tvGoToRegister.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new RegisterFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
     }
 
     private void performLogin() {
-        tilEmail.setError(null);
-        tilPassword.setError(null);
-
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (email.isEmpty()) {
-            tilEmail.setError("Please enter your email");
-            return;
-        }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError("Please enter a valid email address");
-            return;
-        }
-
-        if (password.isEmpty()) {
-            tilPassword.setError("Please enter your password");
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(getContext(), "Please fill all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -82,34 +77,29 @@ public class LoginFragment extends Fragment {
             @Override
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
-                Toast.makeText(getContext(), "Welcome back!", Toast.LENGTH_SHORT).show();
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new UserWorkoutsFragment())
-                        .commit();
+                if (getActivity() instanceof MainActivity) {
+                    MainActivity mainActivity = (MainActivity) getActivity();
+                    mainActivity.showBottomNav(true);
+                    
+                    // Set selected item to Workouts (nav_home)
+                    mainActivity.setSelectedNavItem(R.id.nav_home);
+                    
+                    getParentFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, new UserWorkoutsFragment())
+                            .commit();
+                }
             }
 
             @Override
             public void onError(Exception e) {
                 setLoading(false);
-                if (e instanceof FirebaseAuthInvalidUserException) {
-                    tilEmail.setError("User with this email does not exist.");
-                } else if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                    tilPassword.setError("Incorrect password.");
-                } else {
-                    Toast.makeText(getContext(), "Authentication failed.",
-                            Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(getContext(), "Login failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void setLoading(boolean isLoading) {
-        if (isLoading) {
-            progressBar.setVisibility(View.VISIBLE);
-            btnLogin.setEnabled(false);
-        } else {
-            progressBar.setVisibility(View.GONE);
-            btnLogin.setEnabled(true);
-        }
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        btnLogin.setEnabled(!isLoading);
     }
 }
