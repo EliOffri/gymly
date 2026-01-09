@@ -1,39 +1,35 @@
 package com.project.gymly;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.project.gymly.data.UserRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class EditProfileFragment extends Fragment {
 
-    private Spinner spinnerLevel;
-    
-    // Goals CheckBoxes
-    private CheckBox cbGoalWeightLoss, cbGoalStrength, cbGoalFlexibility, cbGoalTone, cbGoalGeneralFitness;
-    
-    // Equipment CheckBoxes
-    private CheckBox cbEqDumbbells, cbEqBench, cbEqKettlebell, cbEqMat, cbEqTreadmill, cbEqResistanceBand;
-
+    private AutoCompleteTextView levelAutoCompleteTextView;
+    private ChipGroup chipGroupGoals, chipGroupEquipment;
     private Button btnSaveChanges;
-    private FirebaseFirestore db;
+    private UserRepository userRepository;
     private String userId;
 
     public EditProfileFragment() {
@@ -51,15 +47,14 @@ public class EditProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        db = FirebaseFirestore.getInstance();
+        userRepository = UserRepository.getInstance();
 
         initViews(view);
-        setupSpinner();
+        setupLevelDropdown();
 
-        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        userId = prefs.getString("current_user_id", null);
-
-        if (userId != null) {
+        FirebaseUser currentUser = userRepository.getCurrentUser();
+        if (currentUser != null) {
+            userId = currentUser.getUid();
             fetchCurrentData(userId);
         } else {
             Toast.makeText(getContext(), "User not identified", Toast.LENGTH_SHORT).show();
@@ -69,102 +64,105 @@ public class EditProfileFragment extends Fragment {
     }
 
     private void initViews(View view) {
-        spinnerLevel = view.findViewById(R.id.spinner_level);
-
-        // Goals
-        cbGoalWeightLoss = view.findViewById(R.id.cb_goal_weight_loss);
-        cbGoalStrength = view.findViewById(R.id.cb_goal_strength);
-        cbGoalFlexibility = view.findViewById(R.id.cb_goal_flexibility);
-        cbGoalTone = view.findViewById(R.id.cb_goal_tone);
-        cbGoalGeneralFitness = view.findViewById(R.id.cb_goal_general_fitness);
-
-        // Equipment
-        cbEqDumbbells = view.findViewById(R.id.cb_eq_dumbbells);
-        cbEqBench = view.findViewById(R.id.cb_eq_bench);
-        cbEqKettlebell = view.findViewById(R.id.cb_eq_kettlebell);
-        cbEqMat = view.findViewById(R.id.cb_eq_mat);
-        cbEqTreadmill = view.findViewById(R.id.cb_eq_treadmill);
-        cbEqResistanceBand = view.findViewById(R.id.cb_eq_resistance_band);
-
+        levelAutoCompleteTextView = view.findViewById(R.id.level_auto_complete_text_view);
+        chipGroupGoals = view.findViewById(R.id.chip_group_goals);
+        chipGroupEquipment = view.findViewById(R.id.chip_group_equipment);
         btnSaveChanges = view.findViewById(R.id.btn_save_changes);
     }
 
-    private void setupSpinner() {
-        String[] levels = new String[]{"beginner", "intermediate", "advanced"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, levels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerLevel.setAdapter(adapter);
+    private void setupLevelDropdown() {
+        String[] levels = new String[]{"Select Level", "Beginner", "Intermediate", "Advanced"};
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, levels);
+        levelAutoCompleteTextView.setAdapter(adapter);
     }
 
     private void fetchCurrentData(String uid) {
-        db.collection("users").document(uid).get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    if (documentSnapshot.exists()) {
-                        populateFields(documentSnapshot);
-                    }
-                })
-                .addOnFailureListener(e -> Toast.makeText(getContext(), "Error loading data", Toast.LENGTH_SHORT).show());
+        userRepository.getUser(uid, new UserRepository.UserCallback() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (documentSnapshot.exists()) {
+                    populateFields(documentSnapshot);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(getContext(), "Error loading data", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void populateFields(DocumentSnapshot doc) {
         String level = doc.getString("level");
-        if (level != null) {
-            ArrayAdapter adapter = (ArrayAdapter) spinnerLevel.getAdapter();
-            int position = adapter.getPosition(level);
-            if (position >= 0) spinnerLevel.setSelection(position);
+        if (level != null && !level.isEmpty()) {
+            levelAutoCompleteTextView.setText(level, false);
+        } else {
+            levelAutoCompleteTextView.setText("Select Level", false);
         }
+
 
         List<String> goals = (List<String>) doc.get("goals");
         if (goals != null) {
-            if (goals.contains("weight_loss")) cbGoalWeightLoss.setChecked(true);
-            if (goals.contains("strength")) cbGoalStrength.setChecked(true);
-            if (goals.contains("flexibility")) cbGoalFlexibility.setChecked(true);
-            if (goals.contains("tone")) cbGoalTone.setChecked(true);
-            if (goals.contains("general_fitness")) cbGoalGeneralFitness.setChecked(true);
+            for (int i = 0; i < chipGroupGoals.getChildCount(); i++) {
+                Chip chip = (Chip) chipGroupGoals.getChildAt(i);
+                if (goals.contains(chip.getText().toString().toLowerCase().replace(" ", "_"))) {
+                    chip.setChecked(true);
+                }
+            }
         }
 
         List<String> equipment = (List<String>) doc.get("equipment");
         if (equipment != null) {
-            if (equipment.contains("dumbbells")) cbEqDumbbells.setChecked(true);
-            if (equipment.contains("bench")) cbEqBench.setChecked(true);
-            if (equipment.contains("kettlebell")) cbEqKettlebell.setChecked(true);
-            if (equipment.contains("mat")) cbEqMat.setChecked(true);
-            if (equipment.contains("treadmill")) cbEqTreadmill.setChecked(true);
-            if (equipment.contains("resistance_band")) cbEqResistanceBand.setChecked(true);
+            for (int i = 0; i < chipGroupEquipment.getChildCount(); i++) {
+                Chip chip = (Chip) chipGroupEquipment.getChildAt(i);
+                if (equipment.contains(chip.getText().toString().toLowerCase().replace(" ", "_"))) {
+                    chip.setChecked(true);
+                }
+            }
         }
     }
 
     private void saveChanges() {
         if (userId == null) return;
 
-        String level = spinnerLevel.getSelectedItem().toString();
+        String level = levelAutoCompleteTextView.getText().toString();
+        if ("Select Level".equals(level)) {
+            Toast.makeText(getContext(), "Please select a valid fitness level.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Collect Goals
         List<String> goals = new ArrayList<>();
-        if (cbGoalWeightLoss.isChecked()) goals.add("weight_loss");
-        if (cbGoalStrength.isChecked()) goals.add("strength");
-        if (cbGoalFlexibility.isChecked()) goals.add("flexibility");
-        if (cbGoalTone.isChecked()) goals.add("tone");
-        if (cbGoalGeneralFitness.isChecked()) goals.add("general_fitness");
+        for (int i = 0; i < chipGroupGoals.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupGoals.getChildAt(i);
+            if (chip.isChecked()) {
+                goals.add(chip.getText().toString().toLowerCase().replace(" ", "_"));
+            }
+        }
 
-        // Collect Equipment
         List<String> equipment = new ArrayList<>();
-        if (cbEqDumbbells.isChecked()) equipment.add("dumbbells");
-        if (cbEqBench.isChecked()) equipment.add("bench");
-        if (cbEqKettlebell.isChecked()) equipment.add("kettlebell");
-        if (cbEqMat.isChecked()) equipment.add("mat");
-        if (cbEqTreadmill.isChecked()) equipment.add("treadmill");
-        if (cbEqResistanceBand.isChecked()) equipment.add("resistance_band");
+        for (int i = 0; i < chipGroupEquipment.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupEquipment.getChildAt(i);
+            if (chip.isChecked()) {
+                equipment.add(chip.getText().toString().toLowerCase().replace(" ", "_"));
+            }
+        }
 
-        db.collection("users").document(userId)
-                .update("level", level, "goals", goals, "equipment", equipment)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
-                    // Go back to ProfileFragment
-                    getParentFragmentManager().popBackStack();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Error updating profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("level", level);
+        updates.put("goals", goals);
+        updates.put("equipment", equipment);
+
+        userRepository.updateUserProfile(userId, updates, new UserRepository.UpdateCallback() {
+            @Override
+            public void onSuccess() {
+                Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                getParentFragmentManager().popBackStack();
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(getContext(), "Error updating profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }

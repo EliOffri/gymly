@@ -1,7 +1,5 @@
 package com.project.gymly;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -17,8 +15,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.project.gymly.data.UserRepository;
 
 import java.util.List;
 
@@ -27,9 +26,8 @@ public class ProfileFragment extends Fragment {
     private TextView tvName, tvEmail, tvLevel, tvGoals, tvEquipment, tvNotLoggedIn;
     private LinearLayout llProfileDetails;
     private ProgressBar progressBar;
-    private Button btnEditProfile;
-    private FirebaseFirestore db;
-    private String userId;
+    private Button btnEditProfile, btnLogout;
+    private UserRepository userRepository;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -45,15 +43,13 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        db = FirebaseFirestore.getInstance();
+        userRepository = UserRepository.getInstance();
+
         initViews(view);
 
-        // Check if user is logged in
-        SharedPreferences prefs = requireContext().getSharedPreferences("app_prefs", Context.MODE_PRIVATE);
-        userId = prefs.getString("current_user_id", null);
-
-        if (userId != null) {
-            fetchUserData(userId);
+        FirebaseUser currentUser = userRepository.getCurrentUser();
+        if (currentUser != null) {
+            fetchUserData(currentUser.getUid());
         } else {
             showNotLoggedInState();
         }
@@ -62,6 +58,13 @@ public class ProfileFragment extends Fragment {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, new EditProfileFragment())
                     .addToBackStack(null)
+                    .commit();
+        });
+
+        btnLogout.setOnClickListener(v -> {
+            userRepository.signOut();
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new HomeFragment())
                     .commit();
         });
     }
@@ -77,6 +80,7 @@ public class ProfileFragment extends Fragment {
         llProfileDetails = view.findViewById(R.id.ll_profile_details);
         progressBar = view.findViewById(R.id.progressBarProfile);
         btnEditProfile = view.findViewById(R.id.btn_edit_profile);
+        btnLogout = view.findViewById(R.id.btn_logout);
     }
 
     private void fetchUserData(String uid) {
@@ -84,8 +88,10 @@ public class ProfileFragment extends Fragment {
         llProfileDetails.setVisibility(View.GONE);
         tvNotLoggedIn.setVisibility(View.GONE);
 
-        db.collection("users").document(uid).get()
-                .addOnSuccessListener(documentSnapshot -> {
+        userRepository.getUser(uid, new UserRepository.UserCallback() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (isAdded()) {
                     progressBar.setVisibility(View.GONE);
                     if (documentSnapshot.exists()) {
                         populateUserData(documentSnapshot);
@@ -94,12 +100,18 @@ public class ProfileFragment extends Fragment {
                         Toast.makeText(getContext(), "User details not found.", Toast.LENGTH_SHORT).show();
                         showNotLoggedInState();
                     }
-                })
-                .addOnFailureListener(e -> {
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                if (isAdded()) {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(getContext(), "Error fetching profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     showNotLoggedInState();
-                });
+                }
+            }
+        });
     }
 
     private void populateUserData(DocumentSnapshot doc) {
@@ -131,9 +143,5 @@ public class ProfileFragment extends Fragment {
     private void showNotLoggedInState() {
         llProfileDetails.setVisibility(View.GONE);
         tvNotLoggedIn.setVisibility(View.VISIBLE);
-        // Hide edit button if not logged in
-        if (btnEditProfile != null) {
-            btnEditProfile.setVisibility(View.GONE);
-        }
     }
 }

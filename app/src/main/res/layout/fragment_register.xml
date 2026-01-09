@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
@@ -44,6 +45,21 @@
                 android:inputType="textEmailAddress"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Password -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Password"
+            app:passwordToggleEnabled="true"
+            android:layout_marginTop="12dp">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Level -->
         <TextView
             android:layout_width="wrap_content"
@@ -68,12 +84,50 @@
             android:layout_marginTop="24dp"
             android:textSize="16sp"
             android:textStyle="bold"/>
-        
-        <CheckBox android:id="@+id/cb_goal_weight_loss" android:text="Weight Loss" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_goal_strength" android:text="Strength" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_goal_flexibility" android:text="Flexibility" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_goal_tone" android:text="Tone" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_goal_general_fitness" android:text="General Fitness" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_goals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:selectionRequired="false"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goal_weight_loss"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weight Loss" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goal_strength"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Strength" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goal_flexibility"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Flexibility" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goal_tone"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tone" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_goal_general_fitness"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="General Fitness" />
+        </com.google.android.material.chip.ChipGroup>
 
         <!-- Equipment -->
         <TextView
@@ -83,13 +137,57 @@
             android:layout_marginTop="24dp"
             android:textSize="16sp"
             android:textStyle="bold"/>
-        
-        <CheckBox android:id="@+id/cb_eq_dumbbells" android:text="Dumbbells" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_eq_bench" android:text="Bench" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_eq_kettlebell" android:text="Kettlebell" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_eq_mat" android:text="Mat" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_eq_treadmill" android:text="Treadmill" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <CheckBox android:id="@+id/cb_eq_resistance_band" android:text="Resistance Band" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_equipment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:selectionRequired="false"
+            app:singleSelection="false">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_dumbbells"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dumbbells" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_bench"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bench" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_kettlebell"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kettlebell" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_mat"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mat" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_treadmill"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Treadmill" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chip_eq_resistance_band"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resistance Band" />
+        </com.google.android.material.chip.ChipGroup>
 
         <!-- Schedule -->
         <TextView
@@ -138,7 +236,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_submit"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
