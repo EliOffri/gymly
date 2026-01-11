@@ -1,44 +1,76 @@
 package com.project.gymly;
 
 import android.os.Bundle;
+import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.project.gymly.data.UserRepository;
 import com.project.gymly.data.firestore.FirestoreSeeder;
 
 public class MainActivity extends AppCompatActivity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+private UserRepository userRepository;
+private BottomNavigationView bottomNav;
 
-        FirestoreSeeder.seedIfNeeded(this);
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+userRepository = UserRepository.getInstance();
+FirestoreSeeder.seedIfNeeded(this);
 
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new HomeFragment())
-                .commit();
+bottomNav = findViewById(R.id.bottom_navigation);
+bottomNav.setOnNavigationItemSelectedListener(navListener);
 
-        bottomNav.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int id = item.getItemId();
+if (savedInstanceState == null) {
+if (userRepository.isUserLoggedIn()) {
+showBottomNav(true);
+getSupportFragmentManager().beginTransaction()
+.replace(R.id.fragment_container, new HomeFragment())
+.commit();
+} else {
+showBottomNav(false);
+getSupportFragmentManager().beginTransaction()
+.replace(R.id.fragment_container, new LoginFragment())
+.commit();
+}
+}
+}
 
-            if (id == R.id.nav_home) {
-                selectedFragment = new HomeFragment();
-            } else if (id == R.id.nav_library) {
-                selectedFragment = new LibraryFragment();
-            } else if (id == R.id.nav_profile) {
-                selectedFragment = new ProfileFragment();
-            }
+public void showBottomNav(boolean show) {
+if (bottomNav != null) {
+bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
+}
+}
 
-            if (selectedFragment != null) {
-                getSupportFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, selectedFragment)
-                        .commit();
-            }
-            return true;
-        });
-    }
+public void setSelectedNavItem(int itemId) {
+if (bottomNav != null) {
+bottomNav.setSelectedItemId(itemId);
+}
+}
+
+private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
+Fragment selectedFragment = null;
+int itemId = item.getItemId();
+
+if (itemId == R.id.nav_home) {
+selectedFragment = new HomeFragment();
+} else if (itemId == R.id.nav_plan) {
+selectedFragment = new PlanFragment();
+} else if (itemId == R.id.nav_library) {
+selectedFragment = new LibraryFragment();
+} else if (itemId == R.id.nav_profile) {
+selectedFragment = new ProfileFragment();
+}
+
+if (selectedFragment != null) {
+getSupportFragmentManager().beginTransaction()
+.replace(R.id.fragment_container, selectedFragment)
+.commit();
+}
+
+return true;
+};
 }
