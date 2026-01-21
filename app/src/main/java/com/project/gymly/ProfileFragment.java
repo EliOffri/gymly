@@ -61,16 +61,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        btnLogout.setOnClickListener(v -> {
-            userRepository.signOut();
-            if (getActivity() instanceof MainActivity) {
-                MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.showBottomNav(false);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new LoginFragment())
-                        .commit();
-            }
-        });
+        btnLogout.setOnClickListener(v -> performLogout());
     }
 
     private void initViews(View view) {
@@ -85,6 +76,27 @@ public class ProfileFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBarProfile);
         btnEditProfile = view.findViewById(R.id.btn_edit_profile);
         btnLogout = view.findViewById(R.id.btn_logout);
+    }
+
+    private void performLogout() {
+        progressBar.setVisibility(View.VISIBLE);
+        llProfileDetails.setAlpha(0.5f);
+        btnLogout.setEnabled(false);
+
+        userRepository.signOut();
+        
+        Toast.makeText(getContext(), "Logging out...", Toast.LENGTH_SHORT).show();
+
+        // Small delay to let the toast/loader be seen
+        getView().postDelayed(() -> {
+            if (isAdded() && getActivity() instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) getActivity();
+                mainActivity.showBottomNav(false);
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new LoginFragment())
+                        .commit();
+            }
+        }, 800);
     }
 
     private void fetchUserData(String uid) {
@@ -123,7 +135,6 @@ public class ProfileFragment extends Fragment {
         String email = doc.getString("email");
         String level = doc.getString("level");
         
-        // Handle Lists safely
         List<String> goalsList = (List<String>) doc.get("goals");
         List<String> equipmentList = (List<String>) doc.get("equipment");
 

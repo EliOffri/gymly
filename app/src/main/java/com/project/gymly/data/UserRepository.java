@@ -2,18 +2,18 @@ package com.project.gymly.data;
 
 import android.util.Log;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class UserRepository {
-    private static final String TAG = "Gymly_Firestore";
+    private static final String TAG = "UserRepository_Debug";
     private final FirebaseFirestore db;
     private final FirebaseAuth mAuth;
     private static UserRepository instance;
@@ -21,80 +21,65 @@ public class UserRepository {
     public UserRepository() {
         this.db = FirebaseFirestore.getInstance();
         this.mAuth = FirebaseAuth.getInstance();
-        
-        // Ensure Firestore is configured for better reliability
-        FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
-                .setPersistenceEnabled(true)
-                .build();
-        this.db.setFirestoreSettings(settings);
     }
 
     public static synchronized UserRepository getInstance() {
-        if (instance == null) {
-            instance = new UserRepository();
-        }
+        if (instance == null) instance = new UserRepository();
         return instance;
     }
 
-    /**
-     * Verifies if Firestore is reachable. Use this to debug "Network Errors".
-     */
-    public void testConnection(SimpleCallback callback) {
-        db.collection("_connection_test_").document("test").get()
-                .addOnSuccessListener(doc -> {
-                    Log.d(TAG, "Firestore connection: SUCCESS");
-                    callback.onResponse(true);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Firestore connection: FAILED", e);
-                    callback.onResponse(false);
-                });
-    }
-
     public void registerUser(String email, String password, final Map<String, Object> userData, final AuthCallback callback) {
-        Log.d(TAG, "AUTH: Creating user " + email);
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         FirebaseUser firebaseUser = mAuth.getCurrentUser();
                         if (firebaseUser != null) {
-                            String userId = firebaseUser.getUid();
-                            saveUserToFirestore(userId, userData, task, callback);
+                            saveUserToFirestore(firebaseUser.getUid(), userData, task, callback);
                         }
                     } else {
-                        Log.e(TAG, "AUTH FAILED", task.getException());
                         callback.onError(task.getException());
                     }
                 });
     }
 
     private void saveUserToFirestore(String userId, Map<String, Object> userData, Task<AuthResult> authTask, AuthCallback callback) {
-        Log.d(TAG, "FIRESTORE: Saving profile for " + userId);
-        db.collection("users").document(userId)
-                .set(userData)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d(TAG, "FIRESTORE: Profile saved.");
-                    createInitialWorkoutPlan(userId, authTask, callback);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "FIRESTORE FAILED", e);
-                    callback.onError(e);
-                });
+        db.collection("users").document(userId).set(userData)
+                .addOnSuccessListener(aVoid -> createInitialWorkoutPlan(userId, authTask, callback))
+                .addOnFailureListener(callback::onError);
     }
 
     private void createInitialWorkoutPlan(String userId, Task<AuthResult> authTask, AuthCallback callback) {
-        Map<String, Object> initialPlan = new HashMap<>();
-        initialPlan.put("sun", Arrays.asList("pushups_basic", "jumping_jacks"));
-        initialPlan.put("mon", Arrays.asList());
-        initialPlan.put("tue", Arrays.asList("squats_bodyweight", "lunges_forward"));
-        initialPlan.put("wed", Arrays.asList());
-        initialPlan.put("thu", Arrays.asList("plank_basic", "mountain_climbers"));
-        initialPlan.put("fri", Arrays.asList());
-        initialPlan.put("sat", Arrays.asList("glute_bridge", "dead_bug_core"));
+        Map<String, Object> plan = new HashMap<>();
+        plan.put("title", "12-Week Transformation");
+        plan.put("purpose", "General Fitness");
+        plan.put("durationWeeks", 12);
+        plan.put("isActive", true);
+        plan.put("startDate", Timestamp.now());
+        plan.put("totalSessions", 36);
+        plan.put("completedSessions", 0);
 
-        db.collection("weeklyPlans").document(userId).set(initialPlan)
+        // Define default phases so "Journey Overview" isn't empty
+        Map<String, Object> p1 = new HashMap<>();
+        p1.put("title", "Foundations");
+        p1.put("weeks", "1-4");
+        p1.put("objective", "Building consistency and form.");
+        p1.put("composition", "12 Reps / 60s Rest");
+        p1.put("status", "IN PROGRESS");
+
+        Map<String, Object> p2 = new HashMap<>();
+        p2.put("title", "Strength Base");
+        p2.put("weeks", "5-8");
+        p2.put("objective", "Increasing resistance safely.");
+        p2.put("composition", "8 Reps / 90s Rest");
+        p2.put("status", "LOCKED");
+
+        plan.put("phases", Arrays.asList(p1, p2));
+
+        // Save to the correct path that PlanFragment expects
+        db.collection("users").document(userId).collection("plans")
+                .document("active_plan").set(plan)
                 .addOnSuccessListener(aVoid -> callback.onSuccess(authTask))
-                .addOnFailureListener(e -> callback.onSuccess(authTask)); 
+                .addOnFailureListener(callback::onError);
     }
 
     public void loginUser(String email, String password, final AuthCallback callback) {
@@ -124,5 +109,4 @@ public class UserRepository {
     public interface AuthCallback { void onSuccess(Task<AuthResult> task); void onError(Exception e); }
     public interface UserCallback { void onSuccess(DocumentSnapshot document); void onError(Exception e); }
     public interface UpdateCallback { void onSuccess(); void onError(Exception e); }
-    public interface SimpleCallback { void onResponse(boolean success); }
 }

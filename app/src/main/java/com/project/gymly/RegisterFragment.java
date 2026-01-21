@@ -172,10 +172,15 @@ public class RegisterFragment extends Fragment {
             @Override
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
-                Toast.makeText(getContext(), "Registration successful!", Toast.LENGTH_SHORT).show();
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new UserWorkoutsFragment())
-                        .commit();
+                if (getActivity() instanceof MainActivity) {
+                    MainActivity mainActivity = (MainActivity) getActivity();
+                    mainActivity.showBottomNav(true);
+                    mainActivity.setSelectedNavItem(R.id.nav_home);
+                    
+                    getParentFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_container, new HomeFragment())
+                            .commit();
+                }
             }
 
             @Override
