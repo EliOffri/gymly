@@ -19,7 +19,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v4";
+    private static final String PREF_KEY_SEED_DONE = "seed_done_v5"; // Incremented version to force re-seed
 
     private FirestoreSeeder() { }
 
@@ -32,14 +32,14 @@ public final class FirestoreSeeder {
         }
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        seedExerciseLibrary(db);
-        // Other seeding methods can be called here
+        seedExercises(db);
+        seedWorkoutsForUser(db, "elioffri@gmail.com");
 
         prefs.edit().putBoolean(PREF_KEY_SEED_DONE, true).apply();
         Log.d(TAG, "Seeding finished");
     }
 
-    private static void seedExerciseLibrary(FirebaseFirestore db) {
+    private static void seedExercises(FirebaseFirestore db) {
         List<Map<String, Object>> exercises = Arrays.asList(
                 createExercise("pushups_basic", "Push-ups", "Standard floor push-ups", 30, "Chest", 2, Arrays.asList()),
                 createExercise("squats_bodyweight", "Bodyweight Squats", "Squats using only body weight", 30, "Legs", 1, Arrays.asList()),
@@ -56,7 +56,8 @@ public final class FirestoreSeeder {
         );
 
         WriteBatch batch = db.batch();
-        CollectionReference colRef = db.collection("exerciseLibrary");
+        // Changed collection name to "exercises" for consistency
+        CollectionReference colRef = db.collection("exercises");
 
         for (Map<String, Object> ex : exercises) {
             String id = (String) ex.get("id");
@@ -67,8 +68,44 @@ public final class FirestoreSeeder {
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "exerciseLibrary seeded"))
-                .addOnFailureListener(e -> Log.e(TAG, "Error seeding exerciseLibrary", e));
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "exercises collection seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding exercises", e));
+    }
+
+    private static void seedWorkoutsForUser(FirebaseFirestore db, String email) {
+        db.collection("users").whereEqualTo("email", email).get().addOnSuccessListener(queryDocumentSnapshots -> {
+            if (!queryDocumentSnapshots.isEmpty()) {
+                String userId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                
+                // Create a sample 4-week plan
+                Map<String, Object> plan = new HashMap<>();
+                plan.put("title", "4-Week Kickstart");
+                plan.put("isActive", true);
+                plan.put("durationWeeks", 4);
+                plan.put("startDate", FieldValue.serverTimestamp());
+                
+                Map<String, Object> schedule = new HashMap<>();
+                for (int w = 1; w <= 4; w++) {
+                    Map<String, List<String>> weekDays = new HashMap<>();
+                    // Mon: Upper Body
+                    weekDays.put("mon", Arrays.asList("pushups_basic", "shoulder_press_dumbbells", "plank_basic"));
+                    // Wed: Lower Body
+                    weekDays.put("wed", Arrays.asList("squats_bodyweight", "lunges_forward", "glute_bridge"));
+                    // Fri: Cardio & Core
+                    weekDays.put("fri", Arrays.asList("jumping_jacks", "mountain_climbers", "dead_bug_core"));
+                    
+                    schedule.put(String.valueOf(w), weekDays);
+                }
+                plan.put("schedule", schedule);
+                
+                // Add to the user's plans sub-collection
+                db.collection("users").document(userId).collection("plans").add(plan)
+                    .addOnSuccessListener(documentReference -> Log.d(TAG, "Sample plan added for " + email))
+                    .addOnFailureListener(e -> Log.e(TAG, "Error adding plan for " + email, e));
+            } else {
+                Log.d(TAG, "User " + email + " not found, skipping plan seeding");
+            }
+        });
     }
 
     private static Map<String, Object> createExercise(String id, String name, String description, int duration, String muscleGroup, int difficulty, List<String> equipmentRequired) {

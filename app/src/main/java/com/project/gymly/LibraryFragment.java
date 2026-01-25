@@ -34,7 +34,6 @@ public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemC
         recyclerView = view.findViewById(R.id.recycler_exercises);
 
         if (recyclerView == null) {
-            // This prevents the crash. If you see this Toast, your ID in XML is wrong.
             Toast.makeText(getContext(), "Error: View not found!", Toast.LENGTH_SHORT).show();
             return view;
         }
@@ -49,7 +48,8 @@ public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemC
     }
 
     private void fetchExercises() {
-        db.collection("exerciseLibrary")
+        // Changed from "exerciseLibrary" to "exercises"
+        db.collection("exercises")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     exerciseList.clear();
