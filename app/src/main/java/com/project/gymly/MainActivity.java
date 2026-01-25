@@ -8,6 +8,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.project.gymly.data.UserRepository;
 import com.project.gymly.data.firestore.FirestoreSeeder;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
 
     private UserRepository userRepository;
@@ -53,6 +55,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void navigateToExerciseDetail(String exerciseName) {
         ExerciseDetailFragment fragment = ExerciseDetailFragment.newInstance(exerciseName);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    public void navigateToWorkoutDetail(String name, int duration, ArrayList<String> exerciseIds) {
+        WorkoutFragment fragment = WorkoutFragment.newInstance(name, duration, exerciseIds);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null)

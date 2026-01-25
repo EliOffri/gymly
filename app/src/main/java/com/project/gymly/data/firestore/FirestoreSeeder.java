@@ -19,7 +19,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v5"; // Incremented version to force re-seed
+    private static final String PREF_KEY_SEED_DONE = "seed_done_v8"; 
 
     private FirestoreSeeder() { }
 
@@ -27,16 +27,16 @@ public final class FirestoreSeeder {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean alreadySeeded = prefs.getBoolean(PREF_KEY_SEED_DONE, false);
         if (alreadySeeded) {
-            Log.d(TAG, "Already seeded, skipping");
+            Log.d(TAG, "Already seeded (v8), skipping");
             return;
         }
 
+        Log.d(TAG, "Starting seeding process v8...");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         seedExercises(db);
         seedWorkoutsForUser(db, "elioffri@gmail.com");
 
         prefs.edit().putBoolean(PREF_KEY_SEED_DONE, true).apply();
-        Log.d(TAG, "Seeding finished");
     }
 
     private static void seedExercises(FirebaseFirestore db) {
@@ -56,7 +56,6 @@ public final class FirestoreSeeder {
         );
 
         WriteBatch batch = db.batch();
-        // Changed collection name to "exercises" for consistency
         CollectionReference colRef = db.collection("exercises");
 
         for (Map<String, Object> ex : exercises) {
@@ -68,44 +67,51 @@ public final class FirestoreSeeder {
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "exercises collection seeded"))
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Exercises collection seeded successfully"))
                 .addOnFailureListener(e -> Log.e(TAG, "Error seeding exercises", e));
     }
 
     private static void seedWorkoutsForUser(FirebaseFirestore db, String email) {
+        Log.d(TAG, "Searching for user with email: " + email);
         db.collection("users").whereEqualTo("email", email).get().addOnSuccessListener(queryDocumentSnapshots -> {
             if (!queryDocumentSnapshots.isEmpty()) {
                 String userId = queryDocumentSnapshots.getDocuments().get(0).getId();
+                Log.d(TAG, "User found! ID: " + userId + ". Seeding active plan...");
                 
-                // Create a sample 4-week plan
                 Map<String, Object> plan = new HashMap<>();
-                plan.put("title", "4-Week Kickstart");
+                plan.put("title", "8-Week Evolution");
                 plan.put("isActive", true);
-                plan.put("durationWeeks", 4);
+                plan.put("durationWeeks", 8);
                 plan.put("startDate", FieldValue.serverTimestamp());
                 
                 Map<String, Object> schedule = new HashMap<>();
-                for (int w = 1; w <= 4; w++) {
-                    Map<String, List<String>> weekDays = new HashMap<>();
-                    // Mon: Upper Body
-                    weekDays.put("mon", Arrays.asList("pushups_basic", "shoulder_press_dumbbells", "plank_basic"));
-                    // Wed: Lower Body
-                    weekDays.put("wed", Arrays.asList("squats_bodyweight", "lunges_forward", "glute_bridge"));
-                    // Fri: Cardio & Core
-                    weekDays.put("fri", Arrays.asList("jumping_jacks", "mountain_climbers", "dead_bug_core"));
+                for (int w = 1; w <= 8; w++) {
+                    Map<String, Map<String, Object>> weekDays = new HashMap<>();
+                    
+                    weekDays.put("mon", createWorkout("Upper Power", 40, Arrays.asList("pushups_basic", "shoulder_press_dumbbells", "bicep_curl_dumbbells")));
+                    weekDays.put("wed", createWorkout("Lower Strength", 45, Arrays.asList("squats_bodyweight", "lunges_forward", "glute_bridge")));
+                    weekDays.put("fri", createWorkout("Cardio Core", 35, Arrays.asList("jumping_jacks", "mountain_climbers", "plank_basic")));
                     
                     schedule.put(String.valueOf(w), weekDays);
                 }
                 plan.put("schedule", schedule);
                 
-                // Add to the user's plans sub-collection
                 db.collection("users").document(userId).collection("plans").add(plan)
-                    .addOnSuccessListener(documentReference -> Log.d(TAG, "Sample plan added for " + email))
-                    .addOnFailureListener(e -> Log.e(TAG, "Error adding plan for " + email, e));
+                    .addOnSuccessListener(documentReference -> Log.d(TAG, "Active plan seeded successfully for user: " + email))
+                    .addOnFailureListener(e -> Log.e(TAG, "Error seeding plan for user", e));
             } else {
-                Log.d(TAG, "User " + email + " not found, skipping plan seeding");
+                Log.e(TAG, "USER NOT FOUND: Could not find a document in 'users' collection with email: " + email);
+                Log.d(TAG, "Tip: Make sure you have registered with this exact email first.");
             }
-        });
+        }).addOnFailureListener(e -> Log.e(TAG, "Firestore query for user failed", e));
+    }
+
+    private static Map<String, Object> createWorkout(String name, int duration, List<String> exercises) {
+        Map<String, Object> workout = new HashMap<>();
+        workout.put("name", name);
+        workout.put("duration", duration);
+        workout.put("exercises", exercises);
+        return workout;
     }
 
     private static Map<String, Object> createExercise(String id, String name, String description, int duration, String muscleGroup, int difficulty, List<String> equipmentRequired) {
