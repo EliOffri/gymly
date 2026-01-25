@@ -17,7 +17,7 @@ import com.project.gymly.models.Exercise;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LibraryFragment extends Fragment {
+public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
     private ExerciseAdapter adapter;
@@ -40,7 +40,7 @@ public class LibraryFragment extends Fragment {
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ExerciseAdapter(exerciseList);
+        adapter = new ExerciseAdapter(exerciseList, this);
         recyclerView.setAdapter(adapter);
 
         fetchExercises();
@@ -64,5 +64,13 @@ public class LibraryFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     Log.e("GymlyError", "Firestore failed", e);
                 });
+    }
+
+    @Override
+    public void onItemClick(Exercise exercise) {
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            activity.navigateToExerciseDetail(exercise.getName());
+        }
     }
 }

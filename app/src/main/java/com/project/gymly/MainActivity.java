@@ -73,4 +73,16 @@ getSupportFragmentManager().beginTransaction()
 
 return true;
 };
+
+public void navigateToExerciseDetail(String exerciseName) {
+    ExerciseDetailFragment fragment = new ExerciseDetailFragment();
+    Bundle args = new Bundle();
+    args.putString("exerciseName", exerciseName);
+    fragment.setArguments(args);
+
+    getSupportFragmentManager().beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit();
+}
 }

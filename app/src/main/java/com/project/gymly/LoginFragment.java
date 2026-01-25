@@ -85,7 +85,7 @@ public class LoginFragment extends Fragment {
                     mainActivity.setSelectedNavItem(R.id.nav_home);
                     
                     getParentFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, new UserWorkoutsFragment())
+                            .replace(R.id.fragment_container, new HomeFragment())
                             .commit();
                 }
             }
