@@ -3,48 +3,171 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/windowBackground">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_week"
-        android:layout_width="0dp"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/header_today"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="16dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tv_date_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MONDAY, 12 OCT"
+                android:textSize="12sp"
+                android:letterSpacing="0.1"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorSecondary" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="?android:attr/textColorPrimary" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_create_plan_home"
+            style="@style/Widget.MaterialComponents.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Plan"
+            android:textColor="?attr/colorSecondary"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:icon="@android:drawable/ic_input_add"
+            app:iconTint="?attr/colorSecondary" />
+    </LinearLayout>
+
+    <!-- Calendar Container - FIXED HEIGHT AND CONSTRAINTS -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_week_calendar"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
+        android:paddingHorizontal="16dp"
         android:clipToPadding="false"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header_today"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_day" />
+        tools:listitem="@layout/item_calendar_day"
+        tools:itemCount="7" />
 
+    <!-- Motivation Message -->
     <TextView
-        android:id="@+id/tv_workout_details"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:text="Recovery time"
-        android:textSize="18sp"
-        app:layout_constraintTop_toBottomOf="@+id/recycler_week"
-        app:layout_constraintBottom_toTopOf="@+id/btn_create_plan"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-
-    <Button
-        android:id="@+id/btn_create_plan"
-        android:layout_width="0dp"
+        android:id="@+id/tv_motivation"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="32dp"
-        android:padding="16dp"
-        android:text="Create A Plan"
-        android:textSize="18sp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:text="“Consistency is the key to progress.”"
+        android:textStyle="italic"
+        android:textSize="14sp"
+        android:textColor="?android:attr/textColorSecondary"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/rv_week_calendar" />
+
+    <!-- Main Workout Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_daily_workout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_margin="24dp"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="1dp"
+        app:strokeColor="#E2E8F0"
+        app:layout_constraintTop_toBottomOf="@id/tv_motivation"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="32dp">
+
+            <TextView
+                android:id="@+id/tv_workout_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TODAY'S GOAL"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:textColor="?attr/colorSecondary"
+                android:letterSpacing="0.15"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_workout_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Full Body Strength"
+                android:textSize="36sp"
+                android:lineHeight="42sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toBottomOf="@id/tv_workout_status"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_workout_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="45 mins • 6 exercises"
+                android:textSize="16sp"
+                android:textColor="?android:attr/textColorSecondary"
+                app:layout_constraintTop_toBottomOf="@id/tv_workout_name"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <!-- Ghost Logo -->
+            <ImageView
+                android:id="@+id/iv_workout_type"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:alpha="0.05"
+                android:src="@drawable/ic_gymly_logo"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:tint="?attr/colorPrimary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_start_workout"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="View Workout Details"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="32dp"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:visibility="gone"
-        tools:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

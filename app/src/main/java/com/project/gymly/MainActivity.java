@@ -10,79 +10,75 @@ import com.project.gymly.data.firestore.FirestoreSeeder;
 
 public class MainActivity extends AppCompatActivity {
 
-private UserRepository userRepository;
-private BottomNavigationView bottomNav;
+    private UserRepository userRepository;
+    private BottomNavigationView bottomNav;
 
-@Override
-protected void onCreate(Bundle savedInstanceState) {
-super.onCreate(savedInstanceState);
-setContentView(R.layout.activity_main);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-userRepository = UserRepository.getInstance();
-FirestoreSeeder.seedIfNeeded(this);
+        userRepository = UserRepository.getInstance();
+        FirestoreSeeder.seedIfNeeded(this);
 
-bottomNav = findViewById(R.id.bottom_navigation);
-bottomNav.setOnNavigationItemSelectedListener(navListener);
+        bottomNav = findViewById(R.id.bottom_navigation);
+        bottomNav.setOnNavigationItemSelectedListener(navListener);
 
-if (savedInstanceState == null) {
-if (userRepository.isUserLoggedIn()) {
-showBottomNav(true);
-getSupportFragmentManager().beginTransaction()
-.replace(R.id.fragment_container, new HomeFragment())
-.commit();
-} else {
-showBottomNav(false);
-getSupportFragmentManager().beginTransaction()
-.replace(R.id.fragment_container, new LoginFragment())
-.commit();
-}
-}
-}
+        if (savedInstanceState == null) {
+            if (userRepository.isUserLoggedIn()) {
+                showBottomNav(true);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new TodayFragment())
+                        .commit();
+            } else {
+                showBottomNav(false);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new LoginFragment())
+                        .commit();
+            }
+        }
+    }
 
-public void showBottomNav(boolean show) {
-if (bottomNav != null) {
-bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
-}
-}
+    public void showBottomNav(boolean show) {
+        if (bottomNav != null) {
+            bottomNav.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
 
-public void setSelectedNavItem(int itemId) {
-if (bottomNav != null) {
-bottomNav.setSelectedItemId(itemId);
-}
-}
+    public void setSelectedNavItem(int itemId) {
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(itemId);
+        }
+    }
 
-private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
-Fragment selectedFragment = null;
-int itemId = item.getItemId();
+    public void navigateToExerciseDetail(String exerciseName) {
+        ExerciseDetailFragment fragment = ExerciseDetailFragment.newInstance(exerciseName);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
 
-if (itemId == R.id.nav_home) {
-selectedFragment = new HomeFragment();
-} else if (itemId == R.id.nav_plan) {
-selectedFragment = new PlanFragment();
-} else if (itemId == R.id.nav_library) {
-selectedFragment = new LibraryFragment();
-} else if (itemId == R.id.nav_profile) {
-selectedFragment = new ProfileFragment();
-}
+    private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
+        Fragment selectedFragment = null;
+        int itemId = item.getItemId();
 
-if (selectedFragment != null) {
-getSupportFragmentManager().beginTransaction()
-.replace(R.id.fragment_container, selectedFragment)
-.commit();
-}
+        if (itemId == R.id.nav_home) {
+            selectedFragment = new TodayFragment();
+        } else if (itemId == R.id.nav_plan) {
+            selectedFragment = new PlanFragment();
+        } else if (itemId == R.id.nav_library) {
+            selectedFragment = new LibraryFragment();
+        } else if (itemId == R.id.nav_profile) {
+            selectedFragment = new ProfileFragment();
+        }
 
-return true;
-};
+        if (selectedFragment != null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, selectedFragment)
+                    .commit();
+        }
 
-public void navigateToExerciseDetail(String exerciseName) {
-    ExerciseDetailFragment fragment = new ExerciseDetailFragment();
-    Bundle args = new Bundle();
-    args.putString("exerciseName", exerciseName);
-    fragment.setArguments(args);
-
-    getSupportFragmentManager().beginTransaction()
-            .replace(R.id.fragment_container, fragment)
-            .addToBackStack(null)
-            .commit();
-}
+        return true;
+    };
 }
