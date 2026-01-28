@@ -35,16 +35,16 @@ public class TodayFragment extends Fragment {
     private static final String TAG = "TodayFragment";
 
     private LinearLayout calendarStrip;
-    private TextView tvMainTitle;
-    private TextView tvSubtitle;
-    private TextView tvWeekHeader;
-    private View workoutSection;
+    private TextView tvMainTitle, tvSubtitle, tvWeekHeader, tvProfileInitial;
+    private TextView tvWorkoutDateDuration, tvWorkoutTitleCard, tvWorkoutSubtitleCard;
+    private View workoutSection, restDayContainer;
     
     private FirebaseFirestore db;
     private String userId;
     private String userName = "Athlete";
     
     private int selectedDayIndex = -1; 
+    private Calendar currentCalendarRangeStart;
 
     @Nullable
     @Override
@@ -61,7 +61,14 @@ public class TodayFragment extends Fragment {
         tvMainTitle = view.findViewById(R.id.tv_main_title);
         tvSubtitle = view.findViewById(R.id.tv_subtitle);
         tvWeekHeader = view.findViewById(R.id.tv_week_header);
+        tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
+        
         workoutSection = view.findViewById(R.id.workout_section);
+        restDayContainer = view.findViewById(R.id.rest_day_container);
+        
+        tvWorkoutDateDuration = view.findViewById(R.id.tv_workout_date_duration);
+        tvWorkoutTitleCard = view.findViewById(R.id.tv_workout_title_card);
+        tvWorkoutSubtitleCard = view.findViewById(R.id.tv_workout_subtitle_card);
 
         setupUser();
         setupCalendar();
@@ -71,28 +78,28 @@ public class TodayFragment extends Fragment {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             userId = user.getUid();
-            Log.d(TAG, "User ID set: " + userId);
             db.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
                     userName = documentSnapshot.getString("name");
                     if (userName == null || userName.isEmpty()) userName = "Athlete";
                     
                     if (isAdded()) {
-                        // Set initial greeting
                         tvMainTitle.setText("Rest up, " + userName);
+                        tvProfileInitial.setText(userName.substring(0, 1).toUpperCase());
                     }
                 }
             });
-        } else {
-            Log.e(TAG, "No user logged in!");
         }
     }
 
     private void setupCalendar() {
         Calendar cal = Calendar.getInstance();
+        // Move to Monday of current week
         cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        currentCalendarRangeStart = (Calendar) cal.clone();
         
         Calendar today = Calendar.getInstance();
+        // Calculate index (0 for Mon, 6 for Sun)
         int todayIndex = (today.get(Calendar.DAY_OF_WEEK) + 5) % 7; 
         selectedDayIndex = todayIndex;
 
@@ -113,7 +120,6 @@ public class TodayFragment extends Fragment {
             fetchDayStatus(dayKey, dot);
 
             dayView.setOnClickListener(v -> {
-                Log.d(TAG, "Calendar day clicked: " + dayKey);
                 updateSelectionUI(index);
                 fetchWorkoutForDay(dayKey);
             });
@@ -174,26 +180,18 @@ public class TodayFragment extends Fragment {
                         }
                     }
                     dot.setVisibility(View.INVISIBLE);
-                }).addOnFailureListener(e -> {
-                    Log.e(TAG, "Error fetching day status", e);
-                    dot.setVisibility(View.INVISIBLE);
                 });
     }
 
     private void fetchWorkoutForDay(String dayKey) {
-        if (userId == null) {
-            Log.e(TAG, "userId is null in fetchWorkoutForDay");
-            return;
-        }
+        if (userId == null) return;
         
-        Log.d(TAG, "Fetching workout for day: " + dayKey);
         db.collection("users").document(userId).collection("plans")
                 .whereEqualTo("isActive", true)
-                .limit(5) // Fetch a few to find the latest manually if needed, or just limit(1)
+                .limit(5)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
-                        // Sort manually by startDate descending to avoid index requirement
                         List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
                         docs.sort((d1, d2) -> {
                             Timestamp t1 = d1.getTimestamp("startDate");
@@ -205,8 +203,6 @@ public class TodayFragment extends Fragment {
                         DocumentSnapshot planDoc = docs.get(0);
                         int currentWeek = calculateCurrentWeek(planDoc);
                         long totalWeeks = planDoc.getLong("durationWeeks") != null ? planDoc.getLong("durationWeeks") : 0;
-
-                        Log.d(TAG, "Plan found ID: " + planDoc.getId() + ". Week: " + currentWeek + "/" + totalWeeks);
 
                         if (tvWeekHeader != null) {
                             tvWeekHeader.setText("Week " + currentWeek + "/" + totalWeeks);
@@ -222,72 +218,65 @@ public class TodayFragment extends Fragment {
                                 Object workoutObj = weekData.get(dayKey);
                                 
                                 if (workoutObj instanceof Map) {
-                                    Log.d(TAG, "Workout found for " + dayKey);
                                     Map<String, Object> workout = (Map<String, Object>) workoutObj;
                                     String name = (String) workout.get("name");
                                     Long duration = (Long) workout.get("duration");
                                     List<String> exercises = (List<String>) workout.get("exercises");
 
                                     if (isAdded()) {
-                                        tvMainTitle.setText(name != null ? name : "Today's Workout");
-                                        tvSubtitle.setText(duration != null ? duration + " min • Tap to view details" : "Tap to view details");
-                                        workoutSection.setVisibility(View.VISIBLE);
-                                        
-                                        workoutSection.setOnClickListener(v -> {
-                                            if (getActivity() instanceof MainActivity) {
-                                                ((MainActivity) getActivity()).navigateToWorkoutDetail(
-                                                        name, 
-                                                        duration != null ? duration.intValue() : 0, 
-                                                        exercises != null ? new ArrayList<>(exercises) : new ArrayList<>()
-                                                );
-                                            }
-                                        });
+                                        displayWorkoutCard(dayKey, name, duration, exercises);
                                     }
                                     return;
-                                } else {
-                                    Log.d(TAG, "No workout object for dayKey: " + dayKey);
                                 }
-                            } else {
-                                Log.d(TAG, "No weekData for currentWeek: " + currentWeek + ". Keys: " + ((Map)schedule).keySet());
                             }
-                        } else {
-                            Log.d(TAG, "schedule is not a Map or is missing");
                         }
-                    } else {
-                        Log.d(TAG, "No active plan found for user: " + userId);
                     }
                     showRestDayUI();
                 })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error fetching plan query", e);
-                    showRestDayUI();
-                });
+                .addOnFailureListener(e -> showRestDayUI());
+    }
+
+    private void displayWorkoutCard(String dayKey, String name, Long duration, List<String> exercises) {
+        workoutSection.setVisibility(View.VISIBLE);
+        restDayContainer.setVisibility(View.GONE);
+        
+        // Calculate the date string for the card
+        Calendar cardCal = (Calendar) currentCalendarRangeStart.clone();
+        cardCal.add(Calendar.DAY_OF_YEAR, selectedDayIndex);
+        String dateString = new SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(cardCal.getTime());
+        
+        tvWorkoutDateDuration.setText(dateString + " · " + (duration != null ? duration + "m" : "N/A"));
+        tvWorkoutTitleCard.setText(name != null ? name : "Today's Workout");
+        
+        int exerciseCount = exercises != null ? exercises.size() : 0;
+        tvWorkoutSubtitleCard.setText("Strength · " + exerciseCount + " exercises");
+        
+        workoutSection.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).navigateToWorkoutDetail(
+                        name, 
+                        duration != null ? duration.intValue() : 0, 
+                        exercises != null ? new ArrayList<>(exercises) : new ArrayList<>()
+                );
+            }
+        });
     }
 
     private int calculateCurrentWeek(DocumentSnapshot planDoc) {
         Timestamp startDate = planDoc.getTimestamp("startDate");
-        if (startDate == null) {
-            Log.d(TAG, "startDate is null, defaulting to Week 1");
-            return 1;
-        }
-        
+        if (startDate == null) return 1;
         long diffInMs = System.currentTimeMillis() - startDate.toDate().getTime();
-        Log.d(TAG, "Diff in MS: " + diffInMs);
-        
         int week = (int) (diffInMs / (7L * 24 * 60 * 60 * 1000)) + 1;
-        
         Long duration = planDoc.getLong("durationWeeks");
         if (duration != null && week > duration) return duration.intValue();
         if (week < 1) return 1;
-        
-        Log.d(TAG, "Calculated current week: " + week);
         return week;
     }
 
     private void showRestDayUI() {
         if (!isAdded()) return;
-        Log.d(TAG, "Showing Rest Day UI");
         workoutSection.setVisibility(View.GONE);
+        restDayContainer.setVisibility(View.VISIBLE);
         tvMainTitle.setText("Rest up, " + userName);
         tvSubtitle.setText("Recovery fuels success, so enjoy the gift of a rest day!");
     }

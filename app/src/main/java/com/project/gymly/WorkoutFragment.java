@@ -5,9 +5,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,6 +35,7 @@ public class WorkoutFragment extends Fragment {
     private TextView tvTitle, tvSummary;
     private RecyclerView rvExercises;
     private ProgressBar progressBar;
+    private ImageButton btnBack;
     private ExerciseAdapter adapter;
     private List<Exercise> exerciseList = new ArrayList<>();
     private FirebaseFirestore db;
@@ -74,9 +75,16 @@ public class WorkoutFragment extends Fragment {
         tvSummary = view.findViewById(R.id.tv_workout_summary);
         rvExercises = view.findViewById(R.id.rv_workout_exercises);
         progressBar = view.findViewById(R.id.progressBar);
+        btnBack = view.findViewById(R.id.btn_back);
 
         tvTitle.setText(workoutName);
         tvSummary.setText(duration + " min • " + (exerciseIds != null ? exerciseIds.size() : 0) + " Exercises");
+
+        btnBack.setOnClickListener(v -> {
+            if (getActivity() != null) {
+                getActivity().getSupportFragmentManager().popBackStack();
+            }
+        });
 
         setupRecyclerView();
         fetchExercises();
@@ -84,7 +92,6 @@ public class WorkoutFragment extends Fragment {
 
     private void setupRecyclerView() {
         adapter = new ExerciseAdapter(exerciseList, exercise -> {
-            // Navigate to exercise detail if needed
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getName());
             }
@@ -99,6 +106,7 @@ public class WorkoutFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         exerciseList.clear();
         
+        final int total = exerciseIds.size();
         for (String id : exerciseIds) {
             db.collection("exercises").document(id).get().addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
@@ -108,12 +116,14 @@ public class WorkoutFragment extends Fragment {
                         adapter.notifyItemInserted(exerciseList.size() - 1);
                     }
                 }
-                if (exerciseList.size() == exerciseIds.size()) {
+                if (exerciseList.size() >= total) {
                     progressBar.setVisibility(View.GONE);
                 }
             }).addOnFailureListener(e -> {
                 Log.e("WorkoutFragment", "Error fetching exercise", e);
-                progressBar.setVisibility(View.GONE);
+                if (exerciseList.size() >= total) {
+                    progressBar.setVisibility(View.GONE);
+                }
             });
         }
     }

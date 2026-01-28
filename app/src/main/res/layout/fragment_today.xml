@@ -16,6 +16,25 @@
         android:paddingHorizontal="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profile_image_container"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="#6D28D9"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <TextView
+                android:id="@+id/tv_profile_initial"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="E"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:textStyle="bold"/>
+        </com.google.android.material.card.MaterialCardView>
+
         <!-- Week Selector (Centered) -->
         <LinearLayout
             android:layout_width="wrap_content"
@@ -97,90 +116,149 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:padding="16dp">
 
-            <!-- Weather -->
-            <LinearLayout
-                android:layout_width="wrap_content"
+            <!-- Title and Weather Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="end"
-                android:gravity="center_vertical">
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@android:drawable/ic_menu_day"
-                    app:tint="#F59E0B"/>
+                android:layout_marginBottom="16dp">
                 <TextView
+                    android:id="@+id/tv_section_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="12°"
+                    android:text="Today's workouts"
                     android:textColor="@color/white"
-                    android:layout_marginStart="8dp"/>
-            </LinearLayout>
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
+                
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:gravity="center_vertical">
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_menu_day"
+                        app:tint="#F59E0B"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="24°"
+                        android:textColor="@color/white"
+                        android:layout_marginStart="4dp"/>
+                </LinearLayout>
+            </RelativeLayout>
 
-            <!-- Hero Image/Icon -->
-            <ImageView
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginTop="32dp"
-                android:src="@drawable/ic_gymly_logo"
-                app:tint="#3B82F6"
-                android:alpha="0.8"/>
-
-            <!-- Main Title -->
-            <TextView
-                android:id="@+id/tv_main_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Rest up, Eli"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:layout_marginTop="24dp"/>
-
-            <TextView
-                android:id="@+id/tv_subtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Recovery fuels success, so enjoy the gift of a rest day!"
-                android:textSize="14sp"
-                android:textColor="#94A3B8"
-                android:textAlignment="center"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="32dp"/>
-
-            <!-- Workout Section -->
-            <LinearLayout
+            <!-- Workout Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/workout_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:visibility="gone"
-                tools:visibility="visible">
+                tools:visibility="visible"
+                app:cardBackgroundColor="#1E293B"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
 
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <View
+                        android:id="@+id/bar_gradient"
+                        android:layout_width="12dp"
+                        android:layout_height="0dp"
+                        android:background="@drawable/workout_card_gradient"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp"
+                        app:layout_constraintStart_toEndOf="@id/bar_gradient"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_workout_date_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Monday, Jan 26 · 45m"
+                            android:textColor="#94A3B8"
+                            android:textSize="12sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/tv_workout_title_card"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Upper Body Blast"
+                            android:textColor="@color/white"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:layout_marginTop="8dp"/>
+
+                        <TextView
+                            android:id="@+id/tv_workout_subtitle_card"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Strength · 4 exercises"
+                            android:textColor="#94A3B8"
+                            android:textSize="14sp"
+                            android:layout_marginTop="8dp"/>
+
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_margin="16dp"
+                        android:src="@android:drawable/checkbox_off_background"
+                        app:tint="#334155"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Rest Day View (Hidden when workout exists) -->
+            <LinearLayout
+                android:id="@+id/rest_day_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingVertical="32dp">
                 <TextView
+                    android:id="@+id/tv_main_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Your Workout"
-                    android:textColor="@color/white"
-                    android:textSize="18sp"
+                    android:text="Rest up, Eli"
+                    android:textSize="28sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="16dp"/>
+                    android:textColor="@color/white"/>
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rv_today_workout"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tv_subtitle"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false"
-                    tools:listitem="@layout/item_exercise"/>
+                    android:text="Recovery fuels success, so enjoy the gift of a rest day!"
+                    android:textSize="14sp"
+                    android:textColor="#94A3B8"
+                    android:textAlignment="center"
+                    android:layout_marginTop="8dp"/>
             </LinearLayout>
 
             <!-- Week Overview Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="24dp"
                 app:cardBackgroundColor="#1E293B"
                 app:cardCornerRadius="16dp"
                 app:strokeColor="#334155"
@@ -198,7 +276,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Week 16 Overview"
+                            android:text="Week Overview"
                             android:textColor="@color/white"
                             android:textStyle="bold"/>
                         <ImageView
@@ -214,11 +292,10 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:layout_marginTop="16dp">
-                        <!-- Progress Bars -->
-                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="@color/white" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="@color/white" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="@color/white" android:layout_marginEnd="4dp"/>
-                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="@color/white"/>
+                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="#334155" android:layout_marginEnd="4dp"/>
+                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="#334155" android:layout_marginEnd="4dp"/>
+                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="#334155" android:layout_marginEnd="4dp"/>
+                        <View android:layout_width="0dp" android:layout_height="4dp" android:layout_weight="1" android:background="#334155"/>
                     </LinearLayout>
 
                     <RelativeLayout
@@ -228,16 +305,9 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Workouts: 4/4"
+                            android:text="Workouts: 0/4"
                             android:textSize="12sp"
                             android:textColor="#94A3B8"/>
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Distance: 44/37.5KM"
-                            android:textSize="12sp"
-                            android:textColor="#94A3B8"
-                            android:layout_alignParentEnd="true"/>
                     </RelativeLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -268,6 +338,30 @@
                     android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"/>
             </RelativeLayout>
+
+            <!-- Insight cards placeholder -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="2">
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="160dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    app:cardBackgroundColor="#1E293B"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="0dp"/>
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="160dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    app:cardBackgroundColor="#1E293B"
+                    app:cardCornerRadius="16dp"
+                    app:strokeWidth="0dp"/>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

@@ -49,7 +49,6 @@ public class RegisterFragment extends Fragment {
     private UserRepository userRepository;
 
     public RegisterFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -124,7 +123,6 @@ public class RegisterFragment extends Fragment {
     }
 
     private void submitRegistration() {
-        // Reset errors
         if (tilName != null) tilName.setError(null);
         if (tilEmail != null) tilEmail.setError(null);
         if (tilPassword != null) tilPassword.setError(null);
@@ -180,14 +178,9 @@ public class RegisterFragment extends Fragment {
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
                 if (isAdded()) {
-                    Toast.makeText(getContext(), "Registration successful!", Toast.LENGTH_SHORT).show();
                     if (getActivity() instanceof MainActivity) {
-                        ((MainActivity) getActivity()).showBottomNav(true);
-                        ((MainActivity) getActivity()).setSelectedNavItem(R.id.nav_home);
+                        ((MainActivity) getActivity()).onAuthSuccess();
                     }
-                    getParentFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, new TodayFragment())
-                            .commit();
                 }
             }
 

@@ -29,7 +29,6 @@ public class LoginFragment extends Fragment {
     private UserRepository userRepository;
 
     public LoginFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -56,7 +55,7 @@ public class LoginFragment extends Fragment {
         
         tvGoToRegister.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new RegisterFragment())
+                    .replace(R.id.auth_container, new RegisterFragment())
                     .addToBackStack(null)
                     .commit();
         });
@@ -78,15 +77,7 @@ public class LoginFragment extends Fragment {
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
                 if (getActivity() instanceof MainActivity) {
-                    MainActivity mainActivity = (MainActivity) getActivity();
-                    mainActivity.showBottomNav(true);
-                    
-                    // Set selected item to Workouts (nav_home)
-                    mainActivity.setSelectedNavItem(R.id.nav_home);
-                    
-                    getParentFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container, new TodayFragment())
-                            .commit();
+                    ((MainActivity) getActivity()).onAuthSuccess();
                 }
             }
 
@@ -99,7 +90,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void setLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         btnLogin.setEnabled(!isLoading);
     }
 }

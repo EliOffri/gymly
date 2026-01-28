@@ -18,7 +18,7 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Redirect to TodayFragment if this is ever accidentally opened
         getParentFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new TodayFragment())
+                .replace(R.id.today_container, new TodayFragment())
                 .commit();
         return new View(getContext());
     }

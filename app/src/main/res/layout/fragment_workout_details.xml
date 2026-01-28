@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground">
+    android:background="#0F172A">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -16,16 +16,27 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="16dp">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_revert"
+                android:rotation="180"
+                app:tint="@color/white"
+                android:contentDescription="Back" />
 
             <TextView
                 android:id="@+id/tv_workout_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Workout Details"
                 android:textSize="28sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:textColor="@color/white" />
 
             <TextView
                 android:id="@+id/tv_workout_summary"
@@ -34,7 +45,7 @@
                 android:layout_marginTop="4dp"
                 android:text="Focus: Strength and Power"
                 android:textSize="16sp"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:textColor="#94A3B8" />
         </LinearLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
