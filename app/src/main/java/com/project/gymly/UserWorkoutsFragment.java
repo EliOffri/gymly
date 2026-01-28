@@ -18,15 +18,19 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.project.gymly.adapters.UserWorkoutsAdapter;
 import com.project.gymly.models.WorkoutDay;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class UserWorkoutsFragment extends Fragment {
 
@@ -109,11 +113,16 @@ public class UserWorkoutsFragment extends Fragment {
     private void fetchUserWorkouts(String uid) {
         progressBar.setVisibility(View.VISIBLE);
 
-        db.collection("weeklyPlans").document(uid).get()
-                .addOnSuccessListener(documentSnapshot -> {
+        db.collection("users").document(uid).collection("plans")
+                .whereEqualTo("isActive", true)
+                .orderBy("startDate", Query.Direction.DESCENDING)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
                     progressBar.setVisibility(View.GONE);
-                    if (documentSnapshot.exists()) {
-                        fullWorkoutList = parseWorkoutPlan(documentSnapshot);
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        DocumentSnapshot planDoc = queryDocumentSnapshots.getDocuments().get(0);
+                        fullWorkoutList = parseWorkoutPlan(planDoc);
                         filterWorkouts(etSearch.getText().toString());
                     } else {
                         tvEmptyPlan.setVisibility(View.VISIBLE);
@@ -127,13 +136,39 @@ public class UserWorkoutsFragment extends Fragment {
 
     private List<WorkoutDay> parseWorkoutPlan(DocumentSnapshot document) {
         List<WorkoutDay> days = new ArrayList<>();
+        
+        // Calculate current week
+        Timestamp start = document.getTimestamp("startDate");
+        int currentWeek = 1;
+        if (start != null) {
+            long diffInMs = System.currentTimeMillis() - start.toDate().getTime();
+            currentWeek = (int) (diffInMs / (7L * 24 * 60 * 60 * 1000)) + 1;
+        }
+
+        Map<String, Object> schedule = (Map<String, Object>) document.get("schedule");
+        if (schedule == null) return days;
+
+        Map<String, Object> weekData = (Map<String, Object>) schedule.get(String.valueOf(currentWeek));
+        if (weekData == null) return days;
+
         String[] dayKeys = {"sun", "mon", "tue", "wed", "thu", "fri", "sat"};
         String[] dayDisplayNames = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
         for (int i = 0; i < dayKeys.length; i++) {
-            List<String> exercises = (List<String>) document.get(dayKeys[i]);
-            if (exercises != null && !exercises.isEmpty()) {
-                days.add(new WorkoutDay(dayDisplayNames[i], exercises));
+            Object workoutObj = weekData.get(dayKeys[i]);
+            if (workoutObj instanceof Map) {
+                Map<String, Object> workout = (Map<String, Object>) workoutObj;
+                List<Map<String, Object>> exercisesData = (List<Map<String, Object>>) workout.get("exercises");
+                
+                if (exercisesData != null) {
+                    List<String> exerciseNames = new ArrayList<>();
+                    for (Map<String, Object> ex : exercisesData) {
+                        // For now we just show IDs or names if we had them. 
+                        // The WorkoutDay model uses strings.
+                        exerciseNames.add((String) ex.get("exerciseId"));
+                    }
+                    days.add(new WorkoutDay(dayDisplayNames[i], exerciseNames));
+                }
             }
         }
         return days;

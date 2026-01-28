@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -44,9 +45,9 @@ public class TodayFragment extends Fragment {
     private String userId;
     private String userName = "Athlete";
     
-    private int selectedDayIndex = -1; // 0-6
-    private int currentPlanWeek = 1;   // The real week based on current date
-    private int selectedWeek = 1;      // The week the user is currently viewing
+    private int selectedDayIndex = -1; 
+    private int currentPlanWeek = 1;   
+    private int selectedWeek = 1;      
     private int totalPlanWeeks = 4;
     private Timestamp planStartDate;
     
@@ -87,12 +88,10 @@ public class TodayFragment extends Fragment {
         if (user != null) {
             userId = user.getUid();
             db.collection("users").document(userId).get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
+                if (documentSnapshot.exists() && isAdded()) {
                     userName = documentSnapshot.getString("name");
                     if (userName == null || userName.isEmpty()) userName = "Athlete";
-                    if (isAdded()) {
-                        tvMainTitle.setText("Rest up, " + userName);
-                    }
+                    tvMainTitle.setText("Rest up, " + userName);
                 }
             });
         }
@@ -103,12 +102,19 @@ public class TodayFragment extends Fragment {
         
         db.collection("users").document(userId).collection("plans")
                 .whereEqualTo("isActive", true)
-                .orderBy("startDate", Query.Direction.DESCENDING)
-                .limit(1)
+                .limit(5)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot planDoc = queryDocumentSnapshots.getDocuments().get(0);
+                        List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
+                        docs.sort((d1, d2) -> {
+                            Timestamp t1 = d1.getTimestamp("startDate");
+                            Timestamp t2 = d2.getTimestamp("startDate");
+                            if (t1 == null || t2 == null) return 0;
+                            return t2.compareTo(t1);
+                        });
+                        
+                        DocumentSnapshot planDoc = docs.get(0);
                         planStartDate = planDoc.getTimestamp("startDate");
                         Long duration = planDoc.getLong("durationWeeks");
                         totalPlanWeeks = (duration != null) ? duration.intValue() : 4;
@@ -119,7 +125,6 @@ public class TodayFragment extends Fragment {
                         updateWeekHeaderUI();
                         setupCalendar();
                     } else {
-                        // Fallback if no plan
                         selectedWeek = 1;
                         totalPlanWeeks = 1;
                         updateWeekHeaderUI();
@@ -133,13 +138,10 @@ public class TodayFragment extends Fragment {
     }
 
     private void setupCalendar() {
-        // Calculate the Monday of the selected week
         Calendar cal = Calendar.getInstance();
         if (planStartDate != null) {
             cal.setTime(planStartDate.toDate());
-            // Move to Monday of that week
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-            // Add weeks
             cal.add(Calendar.WEEK_OF_YEAR, selectedWeek - 1);
         } else {
             cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
@@ -147,9 +149,6 @@ public class TodayFragment extends Fragment {
         
         calendarRangeStart = (Calendar) cal.clone();
         
-        // Default selection logic:
-        // If we are looking at the REAL current week, select TODAY.
-        // Otherwise, select Monday (index 0).
         if (selectedWeek == currentPlanWeek) {
             Calendar today = Calendar.getInstance();
             selectedDayIndex = (today.get(Calendar.DAY_OF_WEEK) + 5) % 7; 
@@ -207,17 +206,21 @@ public class TodayFragment extends Fragment {
     }
 
     private void updateSelectionUI(int newIndex) {
-        if (selectedDayIndex != -1) {
+        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
             View oldView = calendarStrip.getChildAt(selectedDayIndex);
             updateDaySelectionUI(oldView, false);
         }
         selectedDayIndex = newIndex;
-        View newView = calendarStrip.getChildAt(selectedDayIndex);
-        updateDaySelectionUI(newView, true);
+        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
+            View newView = calendarStrip.getChildAt(selectedDayIndex);
+            updateDaySelectionUI(newView, true);
+        }
     }
 
     private void updateDaySelectionUI(View view, boolean isSelected) {
+        if (view == null) return;
         TextView tvNumber = view.findViewById(R.id.tv_day_number);
+        if (tvNumber == null) return;
         if (isSelected) {
             tvNumber.setBackgroundResource(R.drawable.circle_white_bg);
             tvNumber.setTextColor(getResources().getColor(android.R.color.black, null));
@@ -228,7 +231,7 @@ public class TodayFragment extends Fragment {
     }
 
     private void fetchDayStatus(String dayKey, View dot) {
-        if (userId == null) return;
+        if (userId == null || dot == null) return;
         
         db.collection("users").document(userId).collection("plans")
                 .whereEqualTo("isActive", true)
@@ -243,7 +246,7 @@ public class TodayFragment extends Fragment {
                             Object weekObj = schedule.get(String.valueOf(selectedWeek));
                             if (weekObj instanceof Map) {
                                 Map<String, Object> weekData = (Map<String, Object>) weekObj;
-                                if (weekData.get(dayKey) instanceof Map) {
+                                if (weekData.get(dayKey) != null) {
                                     dot.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981"))); 
                                     dot.setVisibility(View.VISIBLE);
                                     return;
@@ -277,13 +280,33 @@ public class TodayFragment extends Fragment {
                                 if (workoutObj instanceof Map) {
                                     Map<String, Object> workout = (Map<String, Object>) workoutObj;
                                     String name = (String) workout.get("name");
-                                    Long duration = (Long) workout.get("duration");
-                                    List<String> exercises = (List<String>) workout.get("exercises");
-
-                                    if (isAdded()) {
-                                        displayWorkoutCard(name, duration, exercises);
+                                    Object durationObj = workout.get("duration");
+                                    long duration = (durationObj instanceof Number) ? ((Number) durationObj).longValue() : 0L;
+                                    
+                                    Object exercisesObj = workout.get("exercises");
+                                    if (exercisesObj instanceof List) {
+                                        // Use Bundles for maximum reliability during transfer
+                                        ArrayList<Bundle> stepBundles = new ArrayList<>();
+                                        for (Object item : (List<?>) exercisesObj) {
+                                            Bundle b = new Bundle();
+                                            if (item instanceof Map) {
+                                                Map<String, Object> m = (Map<String, Object>) item;
+                                                b.putString("exerciseId", (String) m.get("exerciseId"));
+                                                b.putLong("sets", m.get("sets") instanceof Number ? ((Number) m.get("sets")).longValue() : 3L);
+                                                b.putLong("reps", m.get("reps") instanceof Number ? ((Number) m.get("reps")).longValue() : 12L);
+                                            } else if (item instanceof String) {
+                                                b.putString("exerciseId", (String) item);
+                                                b.putLong("sets", 3);
+                                                b.putLong("reps", 12);
+                                            }
+                                            stepBundles.add(b);
+                                        }
+                                        
+                                        if (isAdded()) {
+                                            displayWorkoutCard(name, duration, stepBundles);
+                                        }
+                                        return;
                                     }
-                                    return;
                                 }
                             }
                         }
@@ -293,7 +316,9 @@ public class TodayFragment extends Fragment {
                 .addOnFailureListener(e -> showRestDayUI());
     }
 
-    private void displayWorkoutCard(String name, Long duration, List<String> exercises) {
+    private void displayWorkoutCard(String name, long duration, ArrayList<Bundle> stepBundles) {
+        if (workoutSection == null || restDayContainer == null) return;
+        
         workoutSection.setVisibility(View.VISIBLE);
         restDayContainer.setVisibility(View.GONE);
         
@@ -301,18 +326,17 @@ public class TodayFragment extends Fragment {
         cardCal.add(Calendar.DAY_OF_YEAR, selectedDayIndex);
         String dateString = new SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(cardCal.getTime());
         
-        tvWorkoutDateDuration.setText(dateString + " · " + (duration != null ? duration + "m" : "N/A"));
+        tvWorkoutDateDuration.setText(dateString + " · " + (duration != 0 ? duration + "m" : "N/A"));
         tvWorkoutTitleCard.setText(name != null ? name : "Workout");
         
-        int exerciseCount = exercises != null ? exercises.size() : 0;
-        tvWorkoutSubtitleCard.setText("Strength · " + exerciseCount + " exercises");
+        tvWorkoutSubtitleCard.setText("Strength · " + stepBundles.size() + " exercises");
         
         workoutSection.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).navigateToWorkoutDetail(
                         name, 
-                        duration != null ? duration.intValue() : 0, 
-                        exercises != null ? new ArrayList<>(exercises) : new ArrayList<>()
+                        (int) duration, 
+                        stepBundles
                 );
             }
         });
@@ -327,7 +351,7 @@ public class TodayFragment extends Fragment {
     }
 
     private void showRestDayUI() {
-        if (!isAdded()) return;
+        if (!isAdded() || workoutSection == null || restDayContainer == null) return;
         workoutSection.setVisibility(View.GONE);
         restDayContainer.setVisibility(View.VISIBLE);
         tvMainTitle.setText("Rest up, " + userName);

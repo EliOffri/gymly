@@ -2,14 +2,17 @@ package com.project.gymly.data;
 
 import android.util.Log;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UserRepository {
@@ -22,7 +25,6 @@ public class UserRepository {
         this.db = FirebaseFirestore.getInstance();
         this.mAuth = FirebaseAuth.getInstance();
         
-        // Ensure Firestore is configured for better reliability
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setPersistenceEnabled(true)
                 .build();
@@ -36,9 +38,6 @@ public class UserRepository {
         return instance;
     }
 
-    /**
-     * Verifies if Firestore is reachable. Use this to debug "Network Errors".
-     */
     public void testConnection(SimpleCallback callback) {
         db.collection("_connection_test_").document("test").get()
                 .addOnSuccessListener(doc -> {
@@ -83,18 +82,64 @@ public class UserRepository {
     }
 
     private void createInitialWorkoutPlan(String userId, Task<AuthResult> authTask, AuthCallback callback) {
-        Map<String, Object> initialPlan = new HashMap<>();
-        initialPlan.put("sun", Arrays.asList("pushups_basic", "jumping_jacks"));
-        initialPlan.put("mon", Arrays.asList());
-        initialPlan.put("tue", Arrays.asList("squats_bodyweight", "lunges_forward"));
-        initialPlan.put("wed", Arrays.asList());
-        initialPlan.put("thu", Arrays.asList("plank_basic", "mountain_climbers"));
-        initialPlan.put("fri", Arrays.asList());
-        initialPlan.put("sat", Arrays.asList("glute_bridge", "dead_bug_core"));
+        // Create a basic 4-week active plan
+        Map<String, Object> plan = new HashMap<>();
+        plan.put("title", "Standard Kickstart");
+        plan.put("isActive", true);
+        plan.put("durationWeeks", 4);
+        plan.put("startDate", FieldValue.serverTimestamp());
+        
+        Map<String, Object> schedule = new HashMap<>();
+        for (int w = 1; w <= 4; w++) {
+            Map<String, Map<String, Object>> weekDays = new HashMap<>();
+            
+            // Monday: Chest & Shoulders
+            weekDays.put("mon", createWorkout("Chest & Shoulders", 30, Arrays.asList(
+                    createWorkoutStep("pushups_basic", 3, 12),
+                    createWorkoutStep("shoulder_press_dumbbells", 3, 10)
+            )));
+            
+            // Wednesday: Legs
+            weekDays.put("wed", createWorkout("Leg Foundations", 30, Arrays.asList(
+                    createWorkoutStep("squats_bodyweight", 3, 15),
+                    createWorkoutStep("lunges_forward", 3, 10)
+            )));
+            
+            // Friday: Core & Cardio
+            weekDays.put("fri", createWorkout("Core Burn", 20, Arrays.asList(
+                    createWorkoutStep("plank_basic", 3, 30),
+                    createWorkoutStep("mountain_climbers", 3, 15)
+            )));
+            
+            schedule.put(String.valueOf(w), weekDays);
+        }
+        plan.put("schedule", schedule);
 
-        db.collection("weeklyPlans").document(userId).set(initialPlan)
-                .addOnSuccessListener(aVoid -> callback.onSuccess(authTask))
-                .addOnFailureListener(e -> callback.onSuccess(authTask)); 
+        db.collection("users").document(userId).collection("plans").add(plan)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Initial plan created in subcollection.");
+                    callback.onSuccess(authTask);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to create initial plan", e);
+                    callback.onSuccess(authTask); // Continue anyway
+                });
+    }
+
+    private Map<String, Object> createWorkout(String name, int duration, List<Map<String, Object>> steps) {
+        Map<String, Object> workout = new HashMap<>();
+        workout.put("name", name);
+        workout.put("duration", duration);
+        workout.put("exercises", steps);
+        return workout;
+    }
+
+    private Map<String, Object> createWorkoutStep(String exerciseId, int sets, int reps) {
+        Map<String, Object> step = new HashMap<>();
+        step.put("exerciseId", exerciseId);
+        step.put("sets", sets);
+        step.put("reps", reps);
+        return step;
     }
 
     public void loginUser(String email, String password, final AuthCallback callback) {
