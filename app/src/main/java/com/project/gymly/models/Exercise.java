@@ -1,16 +1,25 @@
 package com.project.gymly.models;
 
+import com.google.firebase.firestore.DocumentId;
+
 import java.util.List;
 
 public class Exercise {
+    @DocumentId
+    private String id;
     private String name;
     private String description;
-    private int difficulty; // Changed from String to int
-    private String muscleGroup; // Matches Seeder field name
-    private List<String> equipmentRequired; // Matches Seeder field name
+    private int difficulty;
+    private String muscleGroup;
+    private List<String> equipmentRequired;
     private int duration;
+    private String instructions;
+    private String imageUrl;
 
     public Exercise() {}
+
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -29,4 +38,10 @@ public class Exercise {
 
     public int getDuration() { return duration; }
     public void setDuration(int duration) { this.duration = duration; }
+
+    public String getInstructions() { return instructions; }
+    public void setInstructions(String instructions) { this.instructions = instructions; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

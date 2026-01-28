@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/tv_day_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SUN"
+        android:textSize="10sp"
+        android:textColor="#94A3B8"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+
+    <!-- Number Container for Centering Background -->
+    <FrameLayout
+        android:layout_width="32dp"
+        android:layout_height="32dp">
+        <TextView
+            android:id="@+id/tv_day_number"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="25"
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:gravity="center"/>
+    </FrameLayout>
+
+    <!-- Status Dot -->
+    <View
+        android:id="@+id/status_dot"
+        android:layout_width="6dp"
+        android:layout_height="6dp"
+        android:background="@drawable/dot_indicator"
+        android:layout_marginTop="8dp"/>
+
+</LinearLayout>

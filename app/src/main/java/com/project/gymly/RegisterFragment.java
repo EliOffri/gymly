@@ -49,7 +49,6 @@ public class RegisterFragment extends Fragment {
     private UserRepository userRepository;
 
     public RegisterFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -78,6 +77,9 @@ public class RegisterFragment extends Fragment {
         etEmail = view.findViewById(R.id.et_email);
         tilPassword = view.findViewById(R.id.til_password);
         etPassword = view.findViewById(R.id.et_password);
+        if (etPassword == null) {
+            etPassword = view.findViewById(R.id.et_login_password);
+        }
         spinnerLevel = view.findViewById(R.id.spinner_level);
         progressBar = view.findViewById(R.id.progress_bar);
         chipGroupGoals = view.findViewById(R.id.chip_group_goals);
@@ -105,52 +107,55 @@ public class RegisterFragment extends Fragment {
 
         for (int i = 0; i < days.length; i++) {
             View layout = view.findViewById(layoutIds[i]);
+            if (layout == null) continue;
             TextView tvName = layout.findViewById(R.id.tv_day_name);
             TextView tvValue = layout.findViewById(R.id.tv_day_value);
             Slider slider = layout.findViewById(R.id.slider_day);
 
-            tvName.setText(days[i]);
-            slider.addOnChangeListener((s, value, fromUser) -> tvValue.setText((int) value + " min"));
-            
-            daySliders.put(keys[i], slider);
+            if (tvName != null) tvName.setText(days[i]);
+            if (slider != null) {
+                slider.addOnChangeListener((s, value, fromUser) -> {
+                    if (tvValue != null) tvValue.setText((int) value + " min");
+                });
+                daySliders.put(keys[i], slider);
+            }
         }
     }
 
     private void submitRegistration() {
-        // Reset errors
-        tilName.setError(null);
-        tilEmail.setError(null);
-        tilPassword.setError(null);
+        if (tilName != null) tilName.setError(null);
+        if (tilEmail != null) tilEmail.setError(null);
+        if (tilPassword != null) tilPassword.setError(null);
 
-        String name = etName.getText().toString().trim();
-        String email = etEmail.getText().toString().trim();
-        String password = etPassword.getText().toString().trim();
-        String level = spinnerLevel.getSelectedItem().toString();
+        String name = etName != null ? etName.getText().toString().trim() : "";
+        String email = etEmail != null ? etEmail.getText().toString().trim() : "";
+        String password = etPassword != null ? etPassword.getText().toString().trim() : "";
+        String level = spinnerLevel != null ? spinnerLevel.getSelectedItem().toString() : "";
 
         boolean isValid = true;
 
         if (name.isEmpty()) {
-            tilName.setError("Please enter your name");
+            if (tilName != null) tilName.setError("Please enter your name");
             isValid = false;
         }
 
         if (email.isEmpty()) {
-            tilEmail.setError("Please enter your email");
+            if (tilEmail != null) tilEmail.setError("Please enter your email");
             isValid = false;
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError("Please enter a valid email address");
+            if (tilEmail != null) tilEmail.setError("Please enter a valid email address");
             isValid = false;
         }
 
         if (password.isEmpty()) {
-            tilPassword.setError("Please enter a password");
+            if (tilPassword != null) tilPassword.setError("Please enter a password");
             isValid = false;
         } else if (password.length() < 6) {
-            tilPassword.setError("Password should be at least 6 characters");
+            if (tilPassword != null) tilPassword.setError("Password should be at least 6 characters");
             isValid = false;
         }
 
-        if (spinnerLevel.getSelectedItemPosition() == 0) {
+        if (spinnerLevel != null && spinnerLevel.getSelectedItemPosition() == 0) {
             Toast.makeText(getContext(), "Please select your fitness level", Toast.LENGTH_SHORT).show();
             isValid = false;
         }
@@ -172,10 +177,11 @@ public class RegisterFragment extends Fragment {
             @Override
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
-                Toast.makeText(getContext(), "Registration successful!", Toast.LENGTH_SHORT).show();
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new UserWorkoutsFragment())
-                        .commit();
+                if (isAdded()) {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).onAuthSuccess();
+                    }
+                }
             }
 
             @Override
@@ -187,12 +193,13 @@ public class RegisterFragment extends Fragment {
     }
 
     private void handleRegistrationError(Exception e) {
+        if (!isAdded()) return;
         if (e instanceof FirebaseNetworkException) {
             Toast.makeText(getContext(), "Network error. Please check your internet connection.", Toast.LENGTH_LONG).show();
         } else if (e instanceof FirebaseAuthUserCollisionException) {
-            tilEmail.setError("This email is already registered.");
+            if (tilEmail != null) tilEmail.setError("This email is already registered.");
         } else if (e instanceof FirebaseAuthWeakPasswordException) {
-            tilPassword.setError("The password is too weak.");
+            if (tilPassword != null) tilPassword.setError("The password is too weak.");
         } else {
             Toast.makeText(getContext(), "Registration failed: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
@@ -200,15 +207,16 @@ public class RegisterFragment extends Fragment {
     }
 
     private void setLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        btnSubmit.setEnabled(!isLoading);
-        etName.setEnabled(!isLoading);
-        etEmail.setEnabled(!isLoading);
-        etPassword.setEnabled(!isLoading);
+        if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (btnSubmit != null) btnSubmit.setEnabled(!isLoading);
+        if (etName != null) etName.setEnabled(!isLoading);
+        if (etEmail != null) etEmail.setEnabled(!isLoading);
+        if (etPassword != null) etPassword.setEnabled(!isLoading);
     }
 
     private List<String> getSelectedChips(ChipGroup chipGroup) {
         List<String> selected = new ArrayList<>();
+        if (chipGroup == null) return selected;
         for (int i = 0; i < chipGroup.getChildCount(); i++) {
             Chip chip = (Chip) chipGroup.getChildAt(i);
             if (chip.isChecked()) {

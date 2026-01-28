@@ -56,19 +56,14 @@ public class ProfileFragment extends Fragment {
 
         btnEditProfile.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, new EditProfileFragment())
+                    .add(R.id.profile_container, new EditProfileFragment())
                     .addToBackStack(null)
                     .commit();
         });
 
         btnLogout.setOnClickListener(v -> {
-            userRepository.signOut();
             if (getActivity() instanceof MainActivity) {
-                MainActivity mainActivity = (MainActivity) getActivity();
-                mainActivity.showBottomNav(false);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new LoginFragment())
-                        .commit();
+                ((MainActivity) getActivity()).logout();
             }
         });
     }
