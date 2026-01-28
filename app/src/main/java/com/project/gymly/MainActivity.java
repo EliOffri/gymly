@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity {
         libraryCont.setVisibility(View.GONE);
         profileCont.setVisibility(View.GONE);
         
-        // Initialize root fragments if not already there
         FragmentManager fm = getSupportFragmentManager();
         if (fm.findFragmentById(R.id.today_container) == null) {
             fm.beginTransaction().add(R.id.today_container, new TodayFragment()).commit();
@@ -105,8 +104,8 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void navigateToWorkoutDetail(String name, int duration, ArrayList<String> exerciseIds) {
-        WorkoutFragment fragment = WorkoutFragment.newInstance(name, duration, exerciseIds);
+    public void navigateToWorkoutDetail(String name, int duration, ArrayList<Bundle> steps) {
+        WorkoutFragment fragment = WorkoutFragment.newInstance(name, duration, steps);
         getSupportFragmentManager().beginTransaction()
                 .add(currentContainerId, fragment)
                 .addToBackStack(null)
