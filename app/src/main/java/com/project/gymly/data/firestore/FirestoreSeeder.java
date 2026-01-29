@@ -10,6 +10,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 import com.project.gymly.data.ExerciseImageProvider;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v8"; 
+    private static final String PREF_KEY_SEED_DONE = "seed_done_v10"; 
 
     private FirestoreSeeder() { }
 
@@ -27,11 +28,11 @@ public final class FirestoreSeeder {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean alreadySeeded = prefs.getBoolean(PREF_KEY_SEED_DONE, false);
         if (alreadySeeded) {
-            Log.d(TAG, "Already seeded (v8), skipping");
+            Log.d(TAG, "Already seeded (v10), skipping");
             return;
         }
 
-        Log.d(TAG, "Starting seeding process v8...");
+        Log.d(TAG, "Starting seeding process v10...");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         seedExercises(db);
         seedWorkoutsForUser(db, "elioffri@gmail.com");
@@ -72,46 +73,67 @@ public final class FirestoreSeeder {
     }
 
     private static void seedWorkoutsForUser(FirebaseFirestore db, String email) {
-        Log.d(TAG, "Searching for user with email: " + email);
+        Log.d(TAG, "Checking for user: " + email);
         db.collection("users").whereEqualTo("email", email).get().addOnSuccessListener(queryDocumentSnapshots -> {
             if (!queryDocumentSnapshots.isEmpty()) {
                 String userId = queryDocumentSnapshots.getDocuments().get(0).getId();
-                Log.d(TAG, "User found! ID: " + userId + ". Seeding active plan...");
+                Log.d(TAG, "Found user " + email + " with ID: " + userId + ". Seeding plan...");
                 
                 Map<String, Object> plan = new HashMap<>();
-                plan.put("title", "8-Week Evolution");
+                plan.put("title", "12-Week Transformation");
                 plan.put("isActive", true);
-                plan.put("durationWeeks", 8);
+                plan.put("durationWeeks", 12);
                 plan.put("startDate", FieldValue.serverTimestamp());
                 
                 Map<String, Object> schedule = new HashMap<>();
-                for (int w = 1; w <= 8; w++) {
+                for (int w = 1; w <= 12; w++) {
                     Map<String, Map<String, Object>> weekDays = new HashMap<>();
                     
-                    weekDays.put("mon", createWorkout("Upper Power", 40, Arrays.asList("pushups_basic", "shoulder_press_dumbbells", "bicep_curl_dumbbells")));
-                    weekDays.put("wed", createWorkout("Lower Strength", 45, Arrays.asList("squats_bodyweight", "lunges_forward", "glute_bridge")));
-                    weekDays.put("fri", createWorkout("Cardio Core", 35, Arrays.asList("jumping_jacks", "mountain_climbers", "plank_basic")));
+                    weekDays.put("mon", createWorkout("Push Day", 45, Arrays.asList(
+                            createWorkoutStep("pushups_basic", 4, 12),
+                            createWorkoutStep("shoulder_press_dumbbells", 3, 10),
+                            createWorkoutStep("tricep_dips_chair", 3, 15)
+                    )));
+                    
+                    weekDays.put("wed", createWorkout("Pull & Core", 40, Arrays.asList(
+                            createWorkoutStep("bicep_curl_dumbbells", 3, 12),
+                            createWorkoutStep("plank_basic", 3, 45),
+                            createWorkoutStep("mountain_climbers", 3, 20)
+                    )));
+                    
+                    weekDays.put("fri", createWorkout("Leg Day", 50, Arrays.asList(
+                            createWorkoutStep("squats_bodyweight", 4, 20),
+                            createWorkoutStep("lunges_forward", 3, 12),
+                            createWorkoutStep("glute_bridge", 3, 15)
+                    )));
                     
                     schedule.put(String.valueOf(w), weekDays);
                 }
                 plan.put("schedule", schedule);
                 
                 db.collection("users").document(userId).collection("plans").add(plan)
-                    .addOnSuccessListener(documentReference -> Log.d(TAG, "Active plan seeded successfully for user: " + email))
-                    .addOnFailureListener(e -> Log.e(TAG, "Error seeding plan for user", e));
+                    .addOnSuccessListener(docRef -> Log.d(TAG, "Plan seeded successfully for " + email))
+                    .addOnFailureListener(e -> Log.e(TAG, "Failed to seed plan for " + email, e));
             } else {
-                Log.e(TAG, "USER NOT FOUND: Could not find a document in 'users' collection with email: " + email);
-                Log.d(TAG, "Tip: Make sure you have registered with this exact email first.");
+                Log.e(TAG, "User " + email + " NOT FOUND in 'users' collection. Make sure you register first!");
             }
-        }).addOnFailureListener(e -> Log.e(TAG, "Firestore query for user failed", e));
+        }).addOnFailureListener(e -> Log.e(TAG, "Error searching for user", e));
     }
 
-    private static Map<String, Object> createWorkout(String name, int duration, List<String> exercises) {
+    private static Map<String, Object> createWorkout(String name, int duration, List<Map<String, Object>> steps) {
         Map<String, Object> workout = new HashMap<>();
         workout.put("name", name);
         workout.put("duration", duration);
-        workout.put("exercises", exercises);
+        workout.put("exercises", steps);
         return workout;
+    }
+
+    private static Map<String, Object> createWorkoutStep(String exerciseId, int sets, int reps) {
+        Map<String, Object> step = new HashMap<>();
+        step.put("exerciseId", exerciseId);
+        step.put("sets", sets);
+        step.put("reps", reps);
+        return step;
     }
 
     private static Map<String, Object> createExercise(String id, String name, String description, int duration, String muscleGroup, int difficulty, List<String> equipmentRequired) {

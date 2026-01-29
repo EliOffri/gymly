@@ -16,36 +16,40 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.project.gymly.adapters.ExerciseAdapter;
+import com.project.gymly.adapters.WorkoutStepAdapter;
 import com.project.gymly.models.Exercise;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class WorkoutFragment extends Fragment {
 
+    private static final String TAG = "WorkoutFragment";
     private static final String ARG_NAME = "workout_name";
     private static final String ARG_DURATION = "workout_duration";
-    private static final String ARG_EXERCISES = "exercise_ids";
+    private static final String ARG_STEPS_BUNDLES = "workout_steps_bundles";
 
     private String workoutName;
     private int duration;
-    private ArrayList<String> exerciseIds;
+    private ArrayList<Bundle> stepBundles;
 
     private TextView tvTitle, tvSummary;
     private RecyclerView rvExercises;
     private ProgressBar progressBar;
     private ImageButton btnBack;
-    private ExerciseAdapter adapter;
-    private List<Exercise> exerciseList = new ArrayList<>();
+    private WorkoutStepAdapter adapter;
+    private final List<Exercise> exerciseDetailsList = new ArrayList<>();
+    private final List<Map<String, Object>> stepsList = new ArrayList<>();
     private FirebaseFirestore db;
 
-    public static WorkoutFragment newInstance(String name, int duration, ArrayList<String> exerciseIds) {
+    public static WorkoutFragment newInstance(String name, int duration, ArrayList<Bundle> steps) {
         WorkoutFragment fragment = new WorkoutFragment();
         Bundle args = new Bundle();
         args.putString(ARG_NAME, name);
         args.putInt(ARG_DURATION, duration);
-        args.putStringArrayList(ARG_EXERCISES, exerciseIds);
+        args.putParcelableArrayList(ARG_STEPS_BUNDLES, steps);
         fragment.setArguments(args);
         return fragment;
     }
@@ -56,9 +60,21 @@ public class WorkoutFragment extends Fragment {
         if (getArguments() != null) {
             workoutName = getArguments().getString(ARG_NAME);
             duration = getArguments().getInt(ARG_DURATION);
-            exerciseIds = getArguments().getStringArrayList(ARG_EXERCISES);
+            stepBundles = getArguments().getParcelableArrayList(ARG_STEPS_BUNDLES);
         }
         db = FirebaseFirestore.getInstance();
+        
+        // Convert Bundles back to Maps for the adapter
+        if (stepBundles != null) {
+            for (Bundle b : stepBundles) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("exerciseId", b.getString("exerciseId"));
+                map.put("sets", b.getLong("sets"));
+                map.put("reps", b.getLong("reps"));
+                stepsList.add(map);
+                exerciseDetailsList.add(null); // Pre-fill with nulls for loading state
+            }
+        }
     }
 
     @Nullable
@@ -77,21 +93,24 @@ public class WorkoutFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         btnBack = view.findViewById(R.id.btn_back);
 
-        tvTitle.setText(workoutName);
-        tvSummary.setText(duration + " min • " + (exerciseIds != null ? exerciseIds.size() : 0) + " Exercises");
+        if (tvTitle != null) tvTitle.setText(workoutName != null ? workoutName : "Workout");
+        if (tvSummary != null) tvSummary.setText("Strength • " + duration + "m");
 
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> {
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
+            });
+        }
 
         setupRecyclerView();
-        fetchExercises();
+        fetchExerciseDetails();
     }
 
     private void setupRecyclerView() {
-        adapter = new ExerciseAdapter(exerciseList, exercise -> {
+        if (rvExercises == null) return;
+        adapter = new WorkoutStepAdapter(stepsList, exerciseDetailsList, exercise -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getName());
             }
@@ -100,31 +119,44 @@ public class WorkoutFragment extends Fragment {
         rvExercises.setAdapter(adapter);
     }
 
-    private void fetchExercises() {
-        if (exerciseIds == null || exerciseIds.isEmpty()) return;
+    private void fetchExerciseDetails() {
+        if (stepsList.isEmpty()) {
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            return;
+        }
 
-        progressBar.setVisibility(View.VISIBLE);
-        exerciseList.clear();
-        
-        final int total = exerciseIds.size();
-        for (String id : exerciseIds) {
-            db.collection("exercises").document(id).get().addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    Exercise exercise = documentSnapshot.toObject(Exercise.class);
-                    if (exercise != null) {
-                        exerciseList.add(exercise);
-                        adapter.notifyItemInserted(exerciseList.size() - 1);
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
+
+        for (int i = 0; i < stepsList.size(); i++) {
+            final int index = i;
+            String id = (String) stepsList.get(i).get("exerciseId");
+            
+            if (id == null) {
+                checkLoadComplete();
+                continue;
+            }
+            
+            db.collection("exercises").document(id).get().addOnSuccessListener(doc -> {
+                if (doc.exists()) {
+                    Exercise ex = doc.toObject(Exercise.class);
+                    if (ex != null && index < exerciseDetailsList.size()) {
+                        exerciseDetailsList.set(index, ex);
+                        if (adapter != null) adapter.notifyItemChanged(index);
                     }
                 }
-                if (exerciseList.size() >= total) {
-                    progressBar.setVisibility(View.GONE);
-                }
-            }).addOnFailureListener(e -> {
-                Log.e("WorkoutFragment", "Error fetching exercise", e);
-                if (exerciseList.size() >= total) {
-                    progressBar.setVisibility(View.GONE);
-                }
-            });
+                checkLoadComplete();
+            }).addOnFailureListener(e -> checkLoadComplete());
+        }
+    }
+
+    private void checkLoadComplete() {
+        if (!isAdded()) return;
+
+        int count = 0;
+        for (Exercise e : exerciseDetailsList) if (e != null) count++;
+        
+        if (count >= stepsList.size()) {
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
         }
     }
 }
