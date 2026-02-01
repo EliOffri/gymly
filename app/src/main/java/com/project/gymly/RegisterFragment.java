@@ -42,7 +42,6 @@ public class RegisterFragment extends Fragment {
     private UserRepository userRepository;
 
     public RegisterFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -88,23 +87,23 @@ public class RegisterFragment extends Fragment {
         boolean isValid = true;
 
         if (name.isEmpty()) {
-            tilName.setError("Please enter your name");
+            if (tilName != null) tilName.setError("Please enter your name");
             isValid = false;
         }
 
         if (email.isEmpty()) {
-            tilEmail.setError("Please enter your email");
+            if (tilEmail != null) tilEmail.setError("Please enter your email");
             isValid = false;
         } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            tilEmail.setError("Please enter a valid email address");
+            if (tilEmail != null) tilEmail.setError("Please enter a valid email address");
             isValid = false;
         }
 
         if (password.isEmpty()) {
-            tilPassword.setError("Please enter a password");
+            if (tilPassword != null) tilPassword.setError("Please enter a password");
             isValid = false;
         } else if (password.length() < 6) {
-            tilPassword.setError("Password should be at least 6 characters");
+            if (tilPassword != null) tilPassword.setError("Password should be at least 6 characters");
             isValid = false;
         }
 
@@ -123,10 +122,11 @@ public class RegisterFragment extends Fragment {
             @Override
             public void onSuccess(Task<AuthResult> task) {
                 setLoading(false);
-                Toast.makeText(getContext(), "Registration successful!", Toast.LENGTH_SHORT).show();
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.fragment_container, new UserWorkoutsFragment())
-                        .commit();
+                if (isAdded()) {
+                    if (getActivity() instanceof MainActivity) {
+                        ((MainActivity) getActivity()).onAuthSuccess();
+                    }
+                }
             }
 
             @Override
@@ -138,12 +138,13 @@ public class RegisterFragment extends Fragment {
     }
 
     private void handleRegistrationError(Exception e) {
+        if (!isAdded()) return;
         if (e instanceof FirebaseNetworkException) {
             Toast.makeText(getContext(), "Network error. Please check your internet connection.", Toast.LENGTH_LONG).show();
         } else if (e instanceof FirebaseAuthUserCollisionException) {
-            tilEmail.setError("This email is already registered.");
+            if (tilEmail != null) tilEmail.setError("This email is already registered.");
         } else if (e instanceof FirebaseAuthWeakPasswordException) {
-            tilPassword.setError("The password is too weak.");
+            if (tilPassword != null) tilPassword.setError("The password is too weak.");
         } else {
             Toast.makeText(getContext(), "Registration failed: " + e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
         }
@@ -151,10 +152,10 @@ public class RegisterFragment extends Fragment {
     }
 
     private void setLoading(boolean isLoading) {
-        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-        btnSubmit.setEnabled(!isLoading);
-        etName.setEnabled(!isLoading);
-        etEmail.setEnabled(!isLoading);
-        etPassword.setEnabled(!isLoading);
+        if (progressBar != null) progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        if (btnSubmit != null) btnSubmit.setEnabled(!isLoading);
+        if (etName != null) etName.setEnabled(!isLoading);
+        if (etEmail != null) etEmail.setEnabled(!isLoading);
+        if (etPassword != null) etPassword.setEnabled(!isLoading);
     }
 }

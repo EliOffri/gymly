@@ -17,7 +17,7 @@ import com.project.gymly.models.Exercise;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LibraryFragment extends Fragment {
+public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
     private ExerciseAdapter adapter;
@@ -34,13 +34,12 @@ public class LibraryFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_exercises);
 
         if (recyclerView == null) {
-            // This prevents the crash. If you see this Toast, your ID in XML is wrong.
             Toast.makeText(getContext(), "Error: View not found!", Toast.LENGTH_SHORT).show();
             return view;
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ExerciseAdapter(exerciseList);
+        adapter = new ExerciseAdapter(exerciseList, this);
         recyclerView.setAdapter(adapter);
 
         fetchExercises();
@@ -49,7 +48,8 @@ public class LibraryFragment extends Fragment {
     }
 
     private void fetchExercises() {
-        db.collection("exerciseLibrary")
+        // Changed from "exerciseLibrary" to "exercises"
+        db.collection("exercises")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     exerciseList.clear();
@@ -64,5 +64,13 @@ public class LibraryFragment extends Fragment {
                 .addOnFailureListener(e -> {
                     Log.e("GymlyError", "Firestore failed", e);
                 });
+    }
+
+    @Override
+    public void onItemClick(Exercise exercise) {
+        MainActivity activity = (MainActivity) getActivity();
+        if (activity != null) {
+            activity.navigateToExerciseDetail(exercise.getName());
+        }
     }
 }
