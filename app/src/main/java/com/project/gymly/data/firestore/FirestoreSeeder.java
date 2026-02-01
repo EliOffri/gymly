@@ -8,6 +8,7 @@ import android.util.Log;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
 import java.util.Arrays;
@@ -19,7 +20,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v1";
+    private static final String PREF_KEY_SEED_DONE = "seed_done";
 
     // Prevent instantiation
     private FirestoreSeeder() { }
@@ -52,6 +53,9 @@ public final class FirestoreSeeder {
         // 3) Global data (shared by all users)
         seedExerciseLibrary(db);
         seedMotivationMessages(db);
+
+        // 3a) Global plan options (fitness levels, goals, equipment)
+        seedPlanOptions(db);
 
         // 4) User-specific data: weekly plans + sample workout history
         for (String uid : userIds) {
@@ -240,6 +244,44 @@ public final class FirestoreSeeder {
         batch.commit()
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "motivationMessages seeded"))
                 .addOnFailureListener(e -> Log.e(TAG, "Error seeding motivationMessages", e));
+    }
+
+    /**
+     * Seed global plan options: fitness levels, goals and equipment.
+     * Stored under collection "planOptions", document "default".
+     */
+    private static void seedPlanOptions(FirebaseFirestore db) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fitnessLevels", Arrays.asList(
+                "Beginner",
+                "Intermediate",
+                "Advanced"
+        ));
+
+        data.put("goals", Arrays.asList(
+                "Weight loss",
+                "Strength",
+                "Flexibility",
+                "Tone",
+                "General fitness"
+        ));
+
+        data.put("equipment", Arrays.asList(
+                "Dumbbells",
+                "Bench",
+                "Kettlebell",
+                "Mat",
+                "Treadmill",
+                "Resistance band"
+        ));
+
+        db.collection("planOptions")
+                .document("default")
+                .set(data, SetOptions.merge())
+                .addOnSuccessListener(aVoid ->
+                        Log.d(TAG, "planOptions/default seeded"))
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Error seeding planOptions/default", e));
     }
 
     /**

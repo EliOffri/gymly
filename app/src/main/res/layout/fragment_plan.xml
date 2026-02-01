@@ -1,16 +1,227 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
-android:layout_height="match_parent">
-<TextView
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="My Weekly Plan"
-android:textSize="24sp"
-android:textStyle="bold"
-app:layout_constraintBottom_toBottomOf="parent"
-app:layout_constraintEnd_toEndOf="parent"
-app:layout_constraintStart_toStartOf="parent"
-app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tv_plan_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Plan"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Fitness level -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Fitness level"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Spinner
+            android:id="@+id/spinner_level"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp" />
+
+        <!-- Goals -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your goals"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_goals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+            <!-- Chips will be added dynamically from Firestore -->
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Available equipment -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Available equipment"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chip_group_equipment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+            <!-- Chips will be added dynamically from Firestore -->
+        </com.google.android.material.chip.ChipGroup>
+
+        <!-- Schedule -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Workout schedule"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Minutes available per day"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/schedule_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <include
+                android:id="@+id/layout_sun_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_mon_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_tue_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_wed_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_thu_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_fri_plan"
+                layout="@layout/item_day_slider" />
+
+            <include
+                android:id="@+id/layout_sat_plan"
+                layout="@layout/item_day_slider" />
+        </LinearLayout>
+
+        <!-- Plan goal -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_plan_goal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:hint="Plan goal">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_plan_goal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapSentences" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Exercises to avoid -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_exercises_to_avoid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Exercises to avoid (optional)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_exercises_to_avoid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textCapSentences|textMultiLine" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Weight + height -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_weight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Weight (kg)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_weight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_height"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="Height (cm)">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_height"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Plan length -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Plan length"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginTop="24dp" />
+
+        <RadioGroup
+            android:id="@+id/rg_length"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/rb_length_1_month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1 month"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/rb_length_2_months"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2 months" />
+        </RadioGroup>
+
+        <!-- Save button + progress -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_plan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save plan"
+            android:layout_marginTop="24dp" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar_plan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>
