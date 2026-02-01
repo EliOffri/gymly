@@ -7,6 +7,7 @@ import android.util.Log;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 import com.project.gymly.data.ExerciseImageProvider;
 
@@ -20,7 +21,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v10"; 
+    private static final String PREF_KEY_SEED_DONE = "seed_done";
 
     private FirestoreSeeder() { }
 
@@ -34,8 +35,28 @@ public final class FirestoreSeeder {
 
         Log.d(TAG, "Starting seeding process v10...");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        seedExercises(db);
-        seedWorkoutsForUser(db, "elioffri@gmail.com");
+
+        // 1) Seed demo users (must exist before we create their plans)
+        seedUsers(db);
+
+        // 2) User IDs used in the weekly plans and logs
+        String[] userIds = new String[] {
+                "eliUser",
+                "ofirUser"
+        };
+
+        // 3) Global data (shared by all users)
+        seedExerciseLibrary(db);
+        seedMotivationMessages(db);
+
+        // 3a) Global plan options (fitness levels, goals, equipment)
+        seedPlanOptions(db);
+
+        // 4) User-specific data: weekly plans + sample workout history
+        for (String uid : userIds) {
+            seedWeeklyPlanForUser(db, uid);
+            seedCompletedWorkoutsForUser(db, uid);
+        }
 
         prefs.edit().putBoolean(PREF_KEY_SEED_DONE, true).apply();
     }
@@ -146,5 +167,171 @@ public final class FirestoreSeeder {
         map.put("difficulty", difficulty);
         map.put("equipmentRequired", equipmentRequired);
         return map;
+    }
+
+    /**
+     * Seed the "motivationMessages" collection with static messages.
+     */
+    private static void seedMotivationMessages(FirebaseFirestore db) {
+        CollectionReference colRef = db.collection("motivationMessages");
+        WriteBatch batch = db.batch();
+
+        Map<String, Object> msg1 = new HashMap<>();
+        msg1.put("text", "Every workout counts, even a short one.");
+        msg1.put("type", "daily");
+        batch.set(colRef.document("msg1"), msg1);
+
+        Map<String, Object> msg2 = new HashMap<>();
+        msg2.put("text", "Great job! Drink some water and stretch your muscles.");
+        msg2.put("type", "postWorkout");
+        batch.set(colRef.document("msg2"), msg2);
+
+        Map<String, Object> msg3 = new HashMap<>();
+        msg3.put("text", "Small steps each week add up to big results.");
+        msg3.put("type", "daily");
+        batch.set(colRef.document("msg3"), msg3);
+
+        Map<String, Object> msg4 = new HashMap<>();
+        msg4.put("text", "You showed up today – that’s the hardest part.");
+        msg4.put("type", "postWorkout");
+        batch.set(colRef.document("msg4"), msg4);
+
+        batch.commit()
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "motivationMessages seeded"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding motivationMessages", e));
+    }
+
+    /**
+     * Seed global plan options: fitness levels, goals and equipment.
+     * Stored under collection "planOptions", document "default".
+     */
+    private static void seedPlanOptions(FirebaseFirestore db) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("fitnessLevels", Arrays.asList(
+                "Beginner",
+                "Intermediate",
+                "Advanced"
+        ));
+
+        data.put("goals", Arrays.asList(
+                "Weight loss",
+                "Strength",
+                "Flexibility",
+                "Tone",
+                "General fitness"
+        ));
+
+        data.put("equipment", Arrays.asList(
+                "Dumbbells",
+                "Bench",
+                "Kettlebell",
+                "Mat",
+                "Treadmill",
+                "Resistance band"
+        ));
+
+        db.collection("planOptions")
+                .document("default")
+                .set(data, SetOptions.merge())
+                .addOnSuccessListener(aVoid ->
+                        Log.d(TAG, "planOptions/default seeded"))
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Error seeding planOptions/default", e));
+    }
+
+    /**
+     * Seed the "weeklyPlans/{uid}" document for a specific user,
+     * customized based on their profile.
+     */
+    private static void seedWeeklyPlanForUser(FirebaseFirestore db, String uid) {
+        Map<String, Object> data = new HashMap<>();
+
+        if ("ofirUser".equals(uid)) {
+            // Beginner, weight loss + tone, mat/band/treadmill
+            data.put("sun", Arrays.asList(
+                    "treadmill_walk",
+                    "jumping_jacks",
+                    "mountain_climbers"
+            ));
+            data.put("mon", Arrays.asList());
+            data.put("tue", Arrays.asList());
+            data.put("wed", Arrays.asList(
+                    "squats_bodyweight",
+                    "glute_bridge",
+                    "plank_basic",
+                    "dead_bug_core"
+            ));
+            data.put("thu", Arrays.asList());
+            data.put("fri", Arrays.asList());
+            data.put("sat", Arrays.asList());
+
+        } else if ("eliUser".equals(uid)) {
+            // Intermediate, strength + flexibility, dumbbells/bench/kettlebell
+            data.put("sun", Arrays.asList(
+                    "jumping_jacks",
+                    "bicep_curl_dumbbells",
+                    "shoulder_press_dumbbells"
+            ));
+            data.put("mon", Arrays.asList());
+            data.put("tue", Arrays.asList(
+                    "squats_bodyweight",
+                    "lunges_forward",
+                    "glute_bridge"
+            ));
+            data.put("wed", Arrays.asList());
+            data.put("thu", Arrays.asList(
+                    "dead_bug_core",
+                    "plank_basic",
+                    "tricep_dips_chair"
+            ));
+            data.put("fri", Arrays.asList());
+            data.put("sat", Arrays.asList());
+
+        } else {
+            // Fallback plan
+            data.put("sun", Arrays.asList("jumping_jacks", "squats_bodyweight", "plank_basic"));
+            data.put("mon", Arrays.asList());
+            data.put("tue", Arrays.asList("jumping_jacks", "lunges_forward", "dead_bug_core"));
+            data.put("wed", Arrays.asList());
+            data.put("thu", Arrays.asList("bicep_curl_dumbbells", "shoulder_press_dumbbells", "tricep_dips_chair"));
+            data.put("fri", Arrays.asList());
+            data.put("sat", Arrays.asList("glute_bridge", "plank_basic", "dead_bug_core"));
+        }
+
+        data.put("planGeneratedAt", FieldValue.serverTimestamp());
+
+        db.collection("weeklyPlans")
+                .document(uid)
+                .set(data)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "weeklyPlans seeded for " + uid))
+                .addOnFailureListener(e -> Log.e(TAG, "Error seeding weeklyPlans for " + uid, e));
+    }
+
+    /**
+     * Seed sample "completedWorkouts/{uid}/logs" history.
+     */
+    private static void seedCompletedWorkoutsForUser(FirebaseFirestore db, String uid) {
+        CollectionReference logsCol = db.collection("completedWorkouts")
+                .document(uid)
+                .collection("logs");
+
+        Map<String, Object> log1 = new HashMap<>();
+        log1.put("date", FieldValue.serverTimestamp());
+        log1.put("duration", 25);
+        log1.put("calories", 180);
+        log1.put("exercisesCompleted", 3);
+        log1.put("avgDifficulty", 2);
+        log1.put("notes", "Felt good, next time increase duration to 30 min");
+
+        Map<String, Object> log2 = new HashMap<>();
+        log2.put("date", FieldValue.serverTimestamp());
+        log2.put("duration", 30);
+        log2.put("calories", 220);
+        log2.put("exercisesCompleted", 3);
+        log2.put("avgDifficulty", 3);
+        log2.put("notes", "Hard but manageable");
+
+        logsCol.document("log1").set(log1);
+        logsCol.document("log2").set(log2);
     }
 }
