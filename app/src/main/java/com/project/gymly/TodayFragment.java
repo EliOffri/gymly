@@ -2,32 +2,35 @@ package com.project.gymly;
 
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.PopupMenu;
+import android.widget.ListPopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentResultListener;
 
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
+import com.project.gymly.data.UserRepository;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,10 +43,13 @@ public class TodayFragment extends Fragment {
     private TextView tvMainTitle, tvSubtitle, tvWeekHeader;
     private TextView tvWorkoutDateDuration, tvWorkoutTitleCard, tvWorkoutSubtitleCard;
     private View workoutSection, restDayContainer;
+    private ImageView btnCompleteWorkout; 
     
     private FirebaseFirestore db;
     private String userId;
     private String userName = "Athlete";
+    private String currentPlanId; 
+    private UserRepository userRepository;
     
     private int selectedDayIndex = -1; 
     private int currentPlanWeek = 1;   
@@ -52,6 +58,29 @@ public class TodayFragment extends Fragment {
     private Timestamp planStartDate;
     
     private Calendar calendarRangeStart;
+
+    private String currentDayKey; 
+    private boolean isCurrentWorkoutCompleted = false;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Listen for results from WorkoutFragment
+        getParentFragmentManager().setFragmentResultListener("workout_update", this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                boolean completed = result.getBoolean("is_completed");
+                String key = result.getString("day_key");
+                
+                if (key != null && key.equals(currentDayKey)) {
+                    isCurrentWorkoutCompleted = completed;
+                    updateCompletionUI(completed);
+                    updateDotLocally(completed);
+                }
+            }
+        });
+    }
 
     @Nullable
     @Override
@@ -64,6 +93,8 @@ public class TodayFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         db = FirebaseFirestore.getInstance();
+        userRepository = UserRepository.getInstance();
+        
         calendarStrip = view.findViewById(R.id.calendar_strip);
         llWeekSelector = view.findViewById(R.id.ll_week_selector);
         tvMainTitle = view.findViewById(R.id.tv_main_title);
@@ -76,12 +107,16 @@ public class TodayFragment extends Fragment {
         tvWorkoutDateDuration = view.findViewById(R.id.tv_workout_date_duration);
         tvWorkoutTitleCard = view.findViewById(R.id.tv_workout_title_card);
         tvWorkoutSubtitleCard = view.findViewById(R.id.tv_workout_subtitle_card);
+        btnCompleteWorkout = view.findViewById(R.id.btn_complete_workout);
 
         llWeekSelector.setOnClickListener(this::showWeekSelectionMenu);
 
         setupUser();
-        fetchActivePlanInfo();
+        fetchActivePlanInfo(); 
     }
+
+    // Removed onResume re-fetch logic in favor of Fragment Result API
+    // This is cleaner and avoids network calls on every back press
 
     private void setupUser() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -115,12 +150,15 @@ public class TodayFragment extends Fragment {
                         });
                         
                         DocumentSnapshot planDoc = docs.get(0);
+                        currentPlanId = planDoc.getId(); 
                         planStartDate = planDoc.getTimestamp("startDate");
                         Long duration = planDoc.getLong("durationWeeks");
                         totalPlanWeeks = (duration != null) ? duration.intValue() : 4;
                         
-                        currentPlanWeek = calculateWeekFromDate(planStartDate, new Date());
-                        selectedWeek = currentPlanWeek;
+                        if (calendarRangeStart == null) {
+                            currentPlanWeek = calculateWeekFromDate(planStartDate, new Date());
+                            selectedWeek = currentPlanWeek;
+                        }
                         
                         updateWeekHeaderUI();
                         setupCalendar();
@@ -149,11 +187,13 @@ public class TodayFragment extends Fragment {
         
         calendarRangeStart = (Calendar) cal.clone();
         
-        if (selectedWeek == currentPlanWeek) {
-            Calendar today = Calendar.getInstance();
-            selectedDayIndex = (today.get(Calendar.DAY_OF_WEEK) + 5) % 7; 
-        } else {
-            selectedDayIndex = 0;
+        if (selectedDayIndex == -1) {
+            if (selectedWeek == currentPlanWeek) {
+                Calendar today = Calendar.getInstance();
+                selectedDayIndex = (today.get(Calendar.DAY_OF_WEEK) + 5) % 7; 
+            } else {
+                selectedDayIndex = 0;
+            }
         }
 
         for (int i = 0; i < calendarStrip.getChildCount(); i++) {
@@ -170,10 +210,14 @@ public class TodayFragment extends Fragment {
             tvNumber.setText(new SimpleDateFormat("d", Locale.getDefault()).format(date));
 
             updateDaySelectionUI(dayView, i == selectedDayIndex);
-            fetchDayStatus(dayKey, dot);
+            
+            if (currentPlanId != null) {
+                fetchDayStatus(dayKey, dot);
+            }
 
             dayView.setOnClickListener(v -> {
                 updateSelectionUI(index);
+                selectedDayIndex = index; 
                 fetchWorkoutForDay(dayKey);
             });
 
@@ -185,90 +229,19 @@ public class TodayFragment extends Fragment {
         }
     }
 
-    private void showWeekSelectionMenu(View v) {
-        PopupMenu popup = new PopupMenu(getContext(), v);
-        for (int i = 1; i <= totalPlanWeeks; i++) {
-            popup.getMenu().add(0, i, i, "Week " + i);
-        }
-        popup.setOnMenuItemClickListener(item -> {
-            selectedWeek = item.getItemId();
-            updateWeekHeaderUI();
-            setupCalendar();
-            return true;
-        });
-        popup.show();
-    }
-
-    private void updateWeekHeaderUI() {
-        if (tvWeekHeader != null) {
-            tvWeekHeader.setText("Week " + selectedWeek + "/" + totalPlanWeeks);
-        }
-    }
-
-    private void updateSelectionUI(int newIndex) {
-        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
-            View oldView = calendarStrip.getChildAt(selectedDayIndex);
-            updateDaySelectionUI(oldView, false);
-        }
-        selectedDayIndex = newIndex;
-        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
-            View newView = calendarStrip.getChildAt(selectedDayIndex);
-            updateDaySelectionUI(newView, true);
-        }
-    }
-
-    private void updateDaySelectionUI(View view, boolean isSelected) {
-        if (view == null) return;
-        TextView tvNumber = view.findViewById(R.id.tv_day_number);
-        if (tvNumber == null) return;
-        if (isSelected) {
-            tvNumber.setBackgroundResource(R.drawable.circle_white_bg);
-            tvNumber.setTextColor(getResources().getColor(android.R.color.black, null));
-        } else {
-            tvNumber.setBackground(null);
-            tvNumber.setTextColor(getResources().getColor(android.R.color.white, null));
-        }
-    }
-
-    private void fetchDayStatus(String dayKey, View dot) {
-        if (userId == null || dot == null) return;
-        
-        db.collection("users").document(userId).collection("plans")
-                .whereEqualTo("isActive", true)
-                .limit(1)
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot planDoc = queryDocumentSnapshots.getDocuments().get(0);
-                        Object scheduleObj = planDoc.get("schedule");
-                        if (scheduleObj instanceof Map) {
-                            Map<String, Object> schedule = (Map<String, Object>) scheduleObj;
-                            Object weekObj = schedule.get(String.valueOf(selectedWeek));
-                            if (weekObj instanceof Map) {
-                                Map<String, Object> weekData = (Map<String, Object>) weekObj;
-                                if (weekData.get(dayKey) != null) {
-                                    dot.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#10B981"))); 
-                                    dot.setVisibility(View.VISIBLE);
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                    dot.setVisibility(View.INVISIBLE);
-                });
-    }
-
     private void fetchWorkoutForDay(String dayKey) {
-        if (userId == null) return;
+        if (userId == null || currentPlanId == null) {
+            showRestDayUI();
+            return;
+        }
         
-        db.collection("users").document(userId).collection("plans")
-                .whereEqualTo("isActive", true)
-                .limit(1)
+        currentDayKey = dayKey;
+
+        db.collection("users").document(userId).collection("plans").document(currentPlanId)
                 .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    if (!queryDocumentSnapshots.isEmpty()) {
-                        DocumentSnapshot planDoc = queryDocumentSnapshots.getDocuments().get(0);
-                        Object scheduleObj = planDoc.get("schedule");
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Object scheduleObj = documentSnapshot.get("schedule");
                         if (scheduleObj instanceof Map) {
                             Map<String, Object> schedule = (Map<String, Object>) scheduleObj;
                             Object weekObj = schedule.get(String.valueOf(selectedWeek));
@@ -282,10 +255,10 @@ public class TodayFragment extends Fragment {
                                     String name = (String) workout.get("name");
                                     Object durationObj = workout.get("duration");
                                     long duration = (durationObj instanceof Number) ? ((Number) durationObj).longValue() : 0L;
+                                    isCurrentWorkoutCompleted = Boolean.TRUE.equals(workout.get("isCompleted"));
                                     
                                     Object exercisesObj = workout.get("exercises");
                                     if (exercisesObj instanceof List) {
-                                        // Use Bundles for maximum reliability during transfer
                                         ArrayList<Bundle> stepBundles = new ArrayList<>();
                                         for (Object item : (List<?>) exercisesObj) {
                                             Bundle b = new Bundle();
@@ -296,14 +269,12 @@ public class TodayFragment extends Fragment {
                                                 b.putLong("reps", m.get("reps") instanceof Number ? ((Number) m.get("reps")).longValue() : 12L);
                                             } else if (item instanceof String) {
                                                 b.putString("exerciseId", (String) item);
-                                                b.putLong("sets", 3);
-                                                b.putLong("reps", 12);
                                             }
                                             stepBundles.add(b);
                                         }
                                         
                                         if (isAdded()) {
-                                            displayWorkoutCard(name, duration, stepBundles);
+                                            displayWorkoutCard(name, duration, stepBundles, isCurrentWorkoutCompleted, dayKey);
                                         }
                                         return;
                                     }
@@ -316,30 +287,173 @@ public class TodayFragment extends Fragment {
                 .addOnFailureListener(e -> showRestDayUI());
     }
 
-    private void displayWorkoutCard(String name, long duration, ArrayList<Bundle> stepBundles) {
+    private void displayWorkoutCard(String name, long duration, ArrayList<Bundle> stepBundles, boolean isCompleted, String dayKey) {
         if (workoutSection == null || restDayContainer == null) return;
         
         workoutSection.setVisibility(View.VISIBLE);
         restDayContainer.setVisibility(View.GONE);
         
         Calendar cardCal = (Calendar) calendarRangeStart.clone();
-        cardCal.add(Calendar.DAY_OF_YEAR, selectedDayIndex);
-        String dateString = new SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(cardCal.getTime());
+        if (selectedDayIndex >= 0) {
+            cardCal.add(Calendar.DAY_OF_YEAR, selectedDayIndex);
+            String dateString = new SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(cardCal.getTime());
+            tvWorkoutDateDuration.setText(dateString + " · " + (duration != 0 ? duration + "m" : "N/A"));
+        }
         
-        tvWorkoutDateDuration.setText(dateString + " · " + (duration != 0 ? duration + "m" : "N/A"));
         tvWorkoutTitleCard.setText(name != null ? name : "Workout");
         
-        tvWorkoutSubtitleCard.setText("Strength · " + stepBundles.size() + " exercises");
+        int exerciseCount = stepBundles.size();
+        tvWorkoutSubtitleCard.setText("Strength · " + exerciseCount + " exercises");
+        
+        updateCompletionUI(isCompleted);
+
+        btnCompleteWorkout.setOnClickListener(null);
+        if (btnCompleteWorkout != null) {
+            btnCompleteWorkout.setOnClickListener(v -> {
+                boolean newState = !isCurrentWorkoutCompleted;
+                
+                updateCompletionUI(newState); 
+                isCurrentWorkoutCompleted = newState;
+                updateDotLocally(newState);
+
+                userRepository.completeWorkout(userId, currentPlanId, selectedWeek, dayKey, newState, new UserRepository.UpdateCallback() {
+                    @Override
+                    public void onSuccess() {
+                        Log.d(TAG, "Workout status saved.");
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(getContext(), "Failed to save", Toast.LENGTH_SHORT).show();
+                        isCurrentWorkoutCompleted = !newState;
+                        updateCompletionUI(isCurrentWorkoutCompleted);
+                        updateDotLocally(isCurrentWorkoutCompleted);
+                    }
+                });
+            });
+        }
         
         workoutSection.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).navigateToWorkoutDetail(
                         name, 
                         (int) duration, 
-                        stepBundles
+                        stepBundles,
+                        isCurrentWorkoutCompleted, 
+                        currentPlanId, 
+                        selectedWeek,
+                        dayKey
                 );
             }
         });
+    }
+
+    private void updateDotLocally(boolean isCompleted) {
+        if (selectedDayIndex >= 0 && selectedDayIndex < calendarStrip.getChildCount()) {
+            View currentDot = calendarStrip.getChildAt(selectedDayIndex).findViewById(R.id.status_dot);
+            if (currentDot != null) {
+                currentDot.setBackgroundTintList(ColorStateList.valueOf(
+                    Color.parseColor(isCompleted ? "#34D399" : "#F59E0B")
+                ));
+                currentDot.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void updateCompletionUI(boolean isCompleted) {
+        if (btnCompleteWorkout != null) {
+            if (isCompleted) {
+                btnCompleteWorkout.setImageResource(android.R.drawable.checkbox_on_background);
+                btnCompleteWorkout.setColorFilter(Color.parseColor("#34D399")); 
+                tvWorkoutTitleCard.setPaintFlags(tvWorkoutTitleCard.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                tvWorkoutTitleCard.setAlpha(0.5f);
+            } else {
+                btnCompleteWorkout.setImageResource(android.R.drawable.checkbox_off_background);
+                btnCompleteWorkout.setColorFilter(Color.parseColor("#334155")); 
+                tvWorkoutTitleCard.setPaintFlags(tvWorkoutTitleCard.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
+                tvWorkoutTitleCard.setAlpha(1.0f);
+            }
+        }
+    }
+
+    private void fetchDayStatus(String dayKey, View dot) {
+        if (userId == null || dot == null || currentPlanId == null) return;
+        
+        db.collection("users").document(userId).collection("plans").document(currentPlanId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        Object scheduleObj = documentSnapshot.get("schedule");
+                        if (scheduleObj instanceof Map) {
+                            Map<String, Object> schedule = (Map<String, Object>) scheduleObj;
+                            Object weekObj = schedule.get(String.valueOf(selectedWeek));
+                            if (weekObj instanceof Map) {
+                                Map<String, Object> weekData = (Map<String, Object>) weekObj;
+                                Map<String, Object> workout = (Map<String, Object>) weekData.get(dayKey);
+                                if (workout != null) {
+                                    boolean completed = Boolean.TRUE.equals(workout.get("isCompleted"));
+                                    if (completed) {
+                                        dot.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#34D399"))); 
+                                    } else {
+                                        dot.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#F59E0B"))); 
+                                    }
+                                    dot.setVisibility(View.VISIBLE);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    dot.setVisibility(View.INVISIBLE);
+                });
+    }
+
+    private void showWeekSelectionMenu(View v) {
+        List<String> weeks = new ArrayList<>();
+        for (int i = 1; i <= totalPlanWeeks; i++) {
+            weeks.add("Week " + i);
+        }
+        ListPopupWindow listPopupWindow = new ListPopupWindow(getContext());
+        listPopupWindow.setAnchorView(v);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, weeks);
+        listPopupWindow.setAdapter(adapter);
+        listPopupWindow.setWidth(400); 
+        listPopupWindow.setHeight(ListPopupWindow.WRAP_CONTENT);
+        listPopupWindow.setModal(true);
+        listPopupWindow.setOnItemClickListener((parent, view, position, id) -> {
+            selectedWeek = position + 1;
+            updateWeekHeaderUI();
+            setupCalendar();
+            listPopupWindow.dismiss();
+        });
+        listPopupWindow.show();
+    }
+
+    private void updateWeekHeaderUI() {
+        if (tvWeekHeader != null) tvWeekHeader.setText("Week " + selectedWeek + "/" + totalPlanWeeks);
+    }
+
+    private void updateSelectionUI(int newIndex) {
+        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
+            updateDaySelectionUI(calendarStrip.getChildAt(selectedDayIndex), false);
+        }
+        selectedDayIndex = newIndex;
+        if (selectedDayIndex != -1 && selectedDayIndex < calendarStrip.getChildCount()) {
+            updateDaySelectionUI(calendarStrip.getChildAt(selectedDayIndex), true);
+        }
+    }
+
+    private void updateDaySelectionUI(View view, boolean isSelected) {
+        if (view == null) return;
+        TextView tvNumber = view.findViewById(R.id.tv_day_number);
+        if (tvNumber != null) {
+            if (isSelected) {
+                tvNumber.setBackgroundResource(R.drawable.circle_white_bg);
+                tvNumber.setTextColor(getResources().getColor(android.R.color.black, null));
+            } else {
+                tvNumber.setBackground(null);
+                tvNumber.setTextColor(getResources().getColor(android.R.color.white, null));
+            }
+        }
     }
 
     private int calculateWeekFromDate(Timestamp start, Date current) {

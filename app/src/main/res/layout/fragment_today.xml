@@ -16,7 +16,26 @@
         android:paddingHorizontal="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Week Selector (Centered) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/profile_image_container"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="#6D28D9"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+            <TextView
+                android:id="@+id/tv_profile_initial"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="E"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:textStyle="bold"/>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Modern Week Selector (Centered Pill) -->
         <LinearLayout
             android:id="@+id/ll_week_selector"
             android:layout_width="wrap_content"
@@ -24,18 +43,20 @@
             android:gravity="center_vertical"
             android:clickable="true"
             android:focusable="true"
-            android:background="?android:attr/selectableItemBackground"
+            android:background="@drawable/bg_week_selector_pill"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent">
             
             <com.google.android.material.progressindicator.CircularProgressIndicator
-                android:layout_width="20dp"
-                android:layout_height="20dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:progress="75"
-                app:indicatorSize="20dp"
-                app:trackThickness="3dp"
+                app:indicatorSize="16dp"
+                app:trackThickness="2dp"
                 app:indicatorColor="#10B981"
                 app:trackColor="#334155"/>
             
@@ -46,26 +67,18 @@
                 android:text="Week 1/4"
                 android:textColor="@color/white"
                 android:textStyle="bold"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:layout_marginStart="8dp"/>
                 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
                 android:src="@android:drawable/arrow_down_float"
-                app:tint="@color/white"
-                android:layout_marginStart="4dp"/>
+                app:tint="#94A3B8"
+                android:layout_marginStart="6dp"/>
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/calendar_icon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_my_calendar"
-            app:tint="@color/white"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+        <!-- Calendar Icon Removed -->
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -195,6 +208,7 @@
                     </LinearLayout>
 
                     <ImageView
+                        android:id="@+id/btn_complete_workout"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
                         android:layout_margin="16dp"

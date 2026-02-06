@@ -10,6 +10,8 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
+import com.google.firebase.firestore.Query;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -131,6 +133,7 @@ public class UserRepository {
         workout.put("name", name);
         workout.put("duration", duration);
         workout.put("exercises", steps);
+        workout.put("isCompleted", false); // Default status
         return workout;
     }
 
@@ -160,6 +163,21 @@ public class UserRepository {
         db.collection("users").document(userId).update(updates)
                 .addOnSuccessListener(aVoid -> callback.onSuccess())
                 .addOnFailureListener(callback::onError);
+    }
+
+    public void completeWorkout(String userId, String planId, int week, String dayKey, boolean isCompleted, UpdateCallback callback) {
+        if (planId == null || planId.isEmpty()) {
+            callback.onError(new Exception("Invalid plan ID"));
+            return;
+        }
+
+        // Direct update using known plan ID - No query required!
+        String fieldPath = "schedule." + week + "." + dayKey + ".isCompleted";
+        
+        db.collection("users").document(userId).collection("plans").document(planId)
+            .update(fieldPath, isCompleted)
+            .addOnSuccessListener(aVoid -> callback.onSuccess())
+            .addOnFailureListener(callback::onError);
     }
 
     public FirebaseUser getCurrentUser() { return mAuth.getCurrentUser(); }
