@@ -15,6 +15,7 @@ public class Exercise {
     private int duration;
     private String instructions;
     private String imageUrl;
+    private String videoUrl;
 
     public Exercise() {}
 
@@ -44,4 +45,7 @@ public class Exercise {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public String getVideoUrl() { return videoUrl; }
+    public void setVideoUrl(String videoUrl) { this.videoUrl = videoUrl; }
 }

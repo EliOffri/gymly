@@ -96,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
         setupAuthFlow();
     }
 
-    public void navigateToExerciseDetail(String exerciseName) {
-        ExerciseDetailFragment fragment = ExerciseDetailFragment.newInstance(exerciseName);
+    public void navigateToExerciseDetail(String exerciseId) {
+        ExerciseDetailFragment fragment = ExerciseDetailFragment.newInstance(exerciseId);
         getSupportFragmentManager().beginTransaction()
                 .add(currentContainerId, fragment)
                 .addToBackStack(null)

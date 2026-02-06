@@ -1,10 +1,13 @@
 package com.project.gymly;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -20,8 +23,9 @@ import java.util.List;
 public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemClickListener {
 
     private RecyclerView recyclerView;
+    private EditText etSearch;
     private ExerciseAdapter adapter;
-    private List<Exercise> exerciseList = new ArrayList<>();
+    private List<Exercise> fullExerciseList = new ArrayList<>();
     private FirebaseFirestore db;
 
     public LibraryFragment() {}
@@ -32,6 +36,7 @@ public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemC
 
         db = FirebaseFirestore.getInstance();
         recyclerView = view.findViewById(R.id.recycler_exercises);
+        etSearch = view.findViewById(R.id.et_search);
 
         if (recyclerView == null) {
             Toast.makeText(getContext(), "Error: View not found!", Toast.LENGTH_SHORT).show();
@@ -39,27 +44,57 @@ public class LibraryFragment extends Fragment implements ExerciseAdapter.OnItemC
         }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new ExerciseAdapter(exerciseList, this);
+        // Initialize with empty list
+        adapter = new ExerciseAdapter(new ArrayList<>(), this);
         recyclerView.setAdapter(adapter);
 
+        setupSearch();
         fetchExercises();
 
         return view;
     }
 
+    private void setupSearch() {
+        etSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterExercises(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void filterExercises(String query) {
+        List<Exercise> filteredList = new ArrayList<>();
+        String lowerCaseQuery = query.toLowerCase();
+
+        for (Exercise ex : fullExerciseList) {
+            boolean matchesName = ex.getName() != null && ex.getName().toLowerCase().contains(lowerCaseQuery);
+            boolean matchesMuscle = ex.getMuscleGroup() != null && ex.getMuscleGroup().toLowerCase().contains(lowerCaseQuery);
+            
+            if (matchesName || matchesMuscle) {
+                filteredList.add(ex);
+            }
+        }
+        adapter.updateList(filteredList);
+    }
+
     private void fetchExercises() {
-        // Changed from "exerciseLibrary" to "exercises"
         db.collection("exercises")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    exerciseList.clear();
+                    fullExerciseList.clear();
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         Exercise exercise = document.toObject(Exercise.class);
-                        exerciseList.add(exercise);
+                        fullExerciseList.add(exercise);
                     }
-                    if (adapter != null) {
-                        adapter.notifyDataSetChanged();
-                    }
+                    // Initial load shows all exercises
+                    adapter.updateList(new ArrayList<>(fullExerciseList));
                 })
                 .addOnFailureListener(e -> {
                     Log.e("GymlyError", "Firestore failed", e);

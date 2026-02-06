@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class TodayFragment extends Fragment {
 
-    private static final String TAG = "TodayFragment";
+    private static final String TAG = "TodayFragment_Debug";
 
     private LinearLayout calendarStrip, llWeekSelector;
     private TextView tvMainTitle, tvSubtitle, tvWeekHeader;
@@ -285,7 +285,6 @@ public class TodayFragment extends Fragment {
                                     
                                     Object exercisesObj = workout.get("exercises");
                                     if (exercisesObj instanceof List) {
-                                        // Use Bundles for maximum reliability during transfer
                                         ArrayList<Bundle> stepBundles = new ArrayList<>();
                                         for (Object item : (List<?>) exercisesObj) {
                                             Bundle b = new Bundle();
@@ -303,6 +302,7 @@ public class TodayFragment extends Fragment {
                                         }
                                         
                                         if (isAdded()) {
+                                            Log.d(TAG, "Displaying card for " + name + " with " + stepBundles.size() + " steps.");
                                             displayWorkoutCard(name, duration, stepBundles);
                                         }
                                         return;
@@ -333,6 +333,7 @@ public class TodayFragment extends Fragment {
         
         workoutSection.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
+                Log.d(TAG, "Navigating to detail with " + stepBundles.size() + " steps.");
                 ((MainActivity) getActivity()).navigateToWorkoutDetail(
                         name, 
                         (int) duration, 

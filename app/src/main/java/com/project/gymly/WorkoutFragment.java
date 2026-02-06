@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class WorkoutFragment extends Fragment {
 
-    private static final String TAG = "WorkoutFragment";
+    private static final String TAG = "WorkoutFragment_Debug";
     private static final String ARG_NAME = "workout_name";
     private static final String ARG_DURATION = "workout_duration";
     private static final String ARG_STEPS_BUNDLES = "workout_steps_bundles";
@@ -40,8 +40,9 @@ public class WorkoutFragment extends Fragment {
     private ProgressBar progressBar;
     private ImageButton btnBack;
     private WorkoutStepAdapter adapter;
-    private final List<Exercise> exerciseDetailsList = new ArrayList<>();
+    
     private final List<Map<String, Object>> stepsList = new ArrayList<>();
+    private final List<Exercise> exerciseDetailsList = new ArrayList<>();
     private FirebaseFirestore db;
 
     public static WorkoutFragment newInstance(String name, int duration, ArrayList<Bundle> steps) {
@@ -57,22 +58,28 @@ public class WorkoutFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        db = FirebaseFirestore.getInstance();
+        
         if (getArguments() != null) {
             workoutName = getArguments().getString(ARG_NAME);
             duration = getArguments().getInt(ARG_DURATION);
             stepBundles = getArguments().getParcelableArrayList(ARG_STEPS_BUNDLES);
-        }
-        db = FirebaseFirestore.getInstance();
-        
-        // Convert Bundles back to Maps for the adapter
-        if (stepBundles != null) {
-            for (Bundle b : stepBundles) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("exerciseId", b.getString("exerciseId"));
-                map.put("sets", b.getLong("sets"));
-                map.put("reps", b.getLong("reps"));
-                stepsList.add(map);
-                exerciseDetailsList.add(null); // Pre-fill with nulls for loading state
+            
+            Log.d(TAG, "onCreate: Received " + (stepBundles != null ? stepBundles.size() : 0) + " steps.");
+
+            if (stepBundles != null) {
+                stepsList.clear();
+                exerciseDetailsList.clear();
+                for (Bundle b : stepBundles) {
+                    Map<String, Object> map = new HashMap<>();
+                    String id = b.getString("exerciseId");
+                    map.put("exerciseId", id);
+                    map.put("sets", b.getLong("sets", 3));
+                    map.put("reps", b.getLong("reps", 12));
+                    stepsList.add(map);
+                    exerciseDetailsList.add(null);
+                    Log.d(TAG, "Queued step for ID: " + id);
+                }
             }
         }
     }
@@ -93,23 +100,20 @@ public class WorkoutFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         btnBack = view.findViewById(R.id.btn_back);
 
-        if (tvTitle != null) tvTitle.setText(workoutName != null ? workoutName : "Workout");
-        if (tvSummary != null) tvSummary.setText("Strength • " + duration + "m");
+        tvTitle.setText(workoutName != null ? workoutName : "Workout");
+        tvSummary.setText("Strength • " + duration + "m");
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                }
-            });
-        }
+        btnBack.setOnClickListener(v -> {
+            if (getActivity() != null) {
+                getActivity().getSupportFragmentManager().popBackStack();
+            }
+        });
 
         setupRecyclerView();
         fetchExerciseDetails();
     }
 
     private void setupRecyclerView() {
-        if (rvExercises == null) return;
         adapter = new WorkoutStepAdapter(stepsList, exerciseDetailsList, exercise -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getName());
@@ -121,42 +125,48 @@ public class WorkoutFragment extends Fragment {
 
     private void fetchExerciseDetails() {
         if (stepsList.isEmpty()) {
-            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            Log.w(TAG, "fetchExerciseDetails: stepsList is EMPTY.");
             return;
         }
 
-        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
-
+        progressBar.setVisibility(View.VISIBLE);
         for (int i = 0; i < stepsList.size(); i++) {
             final int index = i;
-            String id = (String) stepsList.get(i).get("exerciseId");
+            String id = (String) stepsList.get(index).get("exerciseId");
             
-            if (id == null) {
+            if (id == null || id.isEmpty()) {
+                Log.e(TAG, "Fetching: ID is null at index " + index);
                 checkLoadComplete();
                 continue;
             }
-            
+
+            Log.d(TAG, "Fetching details from DB for ID: " + id);
             db.collection("exercises").document(id).get().addOnSuccessListener(doc -> {
                 if (doc.exists()) {
                     Exercise ex = doc.toObject(Exercise.class);
-                    if (ex != null && index < exerciseDetailsList.size()) {
+                    if (ex != null && isAdded()) {
+                        Log.d(TAG, "Success: Fetched " + ex.getName());
                         exerciseDetailsList.set(index, ex);
                         if (adapter != null) adapter.notifyItemChanged(index);
                     }
+                } else {
+                    Log.e(TAG, "Error: Document " + id + " DOES NOT EXIST in library.");
                 }
                 checkLoadComplete();
-            }).addOnFailureListener(e -> checkLoadComplete());
+            }).addOnFailureListener(e -> {
+                Log.e(TAG, "Error: Network failure for " + id, e);
+                checkLoadComplete();
+            });
         }
     }
 
     private void checkLoadComplete() {
         if (!isAdded()) return;
-
         int count = 0;
         for (Exercise e : exerciseDetailsList) if (e != null) count++;
-        
         if (count >= stepsList.size()) {
-            if (progressBar != null) progressBar.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE);
+            Log.d(TAG, "Done: All details processed.");
         }
     }
 }
