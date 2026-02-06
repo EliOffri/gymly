@@ -20,7 +20,7 @@ public final class FirestoreSeeder {
 
     private static final String TAG = "FirestoreSeeder";
     private static final String PREFS_NAME = "app_prefs";
-    private static final String PREF_KEY_SEED_DONE = "seed_done_v13"; 
+    private static final String PREF_KEY_SEED_DONE = "seed_done_v14"; 
 
     private FirestoreSeeder() { }
 
@@ -28,11 +28,11 @@ public final class FirestoreSeeder {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean alreadySeeded = prefs.getBoolean(PREF_KEY_SEED_DONE, false);
         if (alreadySeeded) {
-            Log.d(TAG, "Already seeded (v13), skipping");
+            Log.d(TAG, "Already seeded (v14), skipping");
             return;
         }
 
-        Log.d(TAG, "Starting seeding process v13 (Embedded Videos)...");
+        Log.d(TAG, "Starting seeding process v14 (Fixed IDs)...");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         seedRichLibrary(db);
         seedWorkoutsForUser(db, "elioffri@gmail.com");
@@ -43,7 +43,8 @@ public final class FirestoreSeeder {
     private static void seedRichLibrary(FirebaseFirestore db) {
         List<Map<String, Object>> exercises = new ArrayList<>();
 
-        // Chest - With Real YouTube IDs
+        // Helper to make creation cleaner and ensure IDs match
+        // Chest
         exercises.add(createRichExercise("Push-ups", "A classic bodyweight movement for chest development.", 
                 "1. Start in plank position.\n2. Lower chest to floor.\n3. Push back up explosively.", 
                 "Chest", 1, "mat", "IODxDxX7oi4")); 
@@ -61,7 +62,13 @@ public final class FirestoreSeeder {
         exercises.add(createRichExercise("Deadlifts", "Total body strength builder focusing on the posterior chain.", 
                 "1. Feet hip-width apart.\n2. Grip bar, hips down, chest up.\n3. Drive through heels to stand.", 
                 "Back", 3, "barbell", "op9kVnSso6Q"));
-        
+        exercises.add(createRichExercise("Seated Cable Rows", "Adds thickness to the middle back.", 
+                "1. Sit tall, knees bent.\n2. Pull handle to stomach.\n3. Squeeze shoulder blades.", 
+                "Back", 2, "cable machine", "GZbfZ033f74")); // Added video ID
+        exercises.add(createRichExercise("Bent Over Rows (Barbell)", "Compound back builder.", 
+                "1. Hinge at hips.\n2. Pull bar to sternum.\n3. Lower slowly.", 
+                "Back", 2, "barbell", "9efgcAjQe7E"));
+
         // Legs
         exercises.add(createRichExercise("Squats (Barbell)", "The ultimate lower body mass builder.", 
                 "1. Bar on traps.\n2. Hips back and down below parallel.\n3. Drive up.", 
@@ -69,6 +76,12 @@ public final class FirestoreSeeder {
         exercises.add(createRichExercise("Lunges (Walking)", "Improves balance and unilateral leg strength.", 
                 "1. Step forward, lower back knee.\n2. Push off front heel to next step.", 
                 "Legs", 2, "dumbbells", "L8fvyb5yoT8"));
+        exercises.add(createRichExercise("Leg Press", "Heavy leg loading without spinal compression.", 
+                "1. Feet shoulder-width on platform.\n2. Lower weight until knees depend.\n3. Push back up.", 
+                "Legs", 1, "leg press machine", "IZxyjW7MPJQ"));
+        exercises.add(createRichExercise("Bulgarian Split Squats", "Advanced single-leg movement for glutes and quads.", 
+                "1. Rear foot on bench.\n2. Lower hips straight down.\n3. Drive up through front heel.", 
+                "Legs", 3, "bench, dumbbells", "2C-uNgKwPLE"));
 
         // Shoulders
         exercises.add(createRichExercise("Overhead Press (Barbell)", "Builds massive shoulders and core stability.", 
@@ -91,23 +104,28 @@ public final class FirestoreSeeder {
                 "1. Plank position.\n2. Drive knees to chest alternately.\n3. Keep hips down.", 
                 "Core", 2, "none", "nmwgirgXLYM"));
 
-        // Write batch
         WriteBatch batch = db.batch();
         CollectionReference colRef = db.collection("exercises");
 
         for (Map<String, Object> ex : exercises) {
-            String id = generateId((String) ex.get("name"));
+            String name = (String) ex.get("name");
+            String id = generateId(name);
             ex.put("id", id);
             ex.put("imageUrl", ExerciseImageProvider.getImageUrl(id));
             
-            // Map body without ID for Firestore doc
+            // Just in case videoId wasn't passed to createRichExercise (fallback)
+            if (!ex.containsKey("videoUrl")) {
+                 ex.put("videoUrl", "https://www.youtube.com/results?search_query=" + name.replace(" ", "+"));
+            }
+            
             Map<String, Object> data = new HashMap<>(ex);
             data.remove("id"); 
             batch.set(colRef.document(id), data);
+            Log.d(TAG, "Seeding Exercise: " + name + " -> ID: " + id);
         }
 
         batch.commit()
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Rich Library seeded (v13)"))
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Rich Library seeded (v14)"))
                 .addOnFailureListener(e -> Log.e(TAG, "Error seeding library", e));
     }
 
@@ -119,7 +137,7 @@ public final class FirestoreSeeder {
         map.put("muscleGroup", group);
         map.put("difficulty", diff);
         map.put("duration", 60); 
-        map.put("videoUrl", videoId); // Storing ID now, not full URL
+        map.put("videoUrl", videoId);
         
         List<String> equipment = new ArrayList<>();
         if (!equip.equals("none")) {
@@ -131,7 +149,12 @@ public final class FirestoreSeeder {
     }
 
     private static String generateId(String name) {
-        return name.toLowerCase().replaceAll("[^a-z0-9]", "_").replaceAll("_+", "_");
+        // e.g. "Bench Press (Barbell)" -> "bench_press_barbell"
+        // e.g. "Push-ups" -> "push_ups"
+        return name.toLowerCase()
+                .replaceAll("[^a-z0-9]", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", ""); // Trim underscores
     }
 
     private static void seedWorkoutsForUser(FirebaseFirestore db, String email) {
@@ -149,6 +172,12 @@ public final class FirestoreSeeder {
                 for (int w = 1; w <= 12; w++) {
                     Map<String, Map<String, Object>> weekDays = new HashMap<>();
                     
+                    // IMPORTANT: Manually matched these IDs to the generateId output
+                    // "Bench Press (Barbell)" -> "bench_press_barbell"
+                    // "Overhead Press (Barbell)" -> "overhead_press_barbell"
+                    // "Incline Dumbbell Press" -> "incline_dumbbell_press"
+                    // "Tricep Dips" -> "tricep_dips"
+                    
                     weekDays.put("mon", createWorkout("Push Power", 50, Arrays.asList(
                             createWorkoutStep("bench_press_barbell", 4, 8),
                             createWorkoutStep("overhead_press_barbell", 3, 10),
@@ -159,11 +188,14 @@ public final class FirestoreSeeder {
                     weekDays.put("wed", createWorkout("Pull Strength", 45, Arrays.asList(
                             createWorkoutStep("deadlifts", 3, 5),
                             createWorkoutStep("pull_ups", 3, 8),
+                            createWorkoutStep("seated_cable_rows", 3, 12),
                             createWorkoutStep("bicep_curls_barbell", 3, 12)
                     )));
                     
                     weekDays.put("fri", createWorkout("Leg Destruction", 60, Arrays.asList(
                             createWorkoutStep("squats_barbell", 4, 10),
+                            createWorkoutStep("leg_press", 3, 12),
+                            createWorkoutStep("bulgarian_split_squats", 3, 10),
                             createWorkoutStep("lunges_walking", 3, 20)
                     )));
                     
@@ -171,7 +203,8 @@ public final class FirestoreSeeder {
                 }
                 plan.put("schedule", schedule);
                 
-                db.collection("users").document(userId).collection("plans").add(plan);
+                db.collection("users").document(userId).collection("plans").add(plan)
+                    .addOnSuccessListener(docRef -> Log.d(TAG, "Plan seeded for " + email));
             }
         });
     }

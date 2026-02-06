@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.project.gymly.data.UserRepository;
@@ -60,10 +59,12 @@ public class MainActivity extends AppCompatActivity {
         
         FragmentManager fm = getSupportFragmentManager();
         if (fm.findFragmentById(R.id.today_container) == null) {
-            fm.beginTransaction().add(R.id.today_container, new TodayFragment()).commit();
-            fm.beginTransaction().add(R.id.plan_container, new PlanFragment()).commit();
-            fm.beginTransaction().add(R.id.library_container, new LibraryFragment()).commit();
-            fm.beginTransaction().add(R.id.profile_container, new ProfileFragment()).commit();
+            fm.beginTransaction()
+                .add(R.id.today_container, new TodayFragment())
+                .add(R.id.plan_container, new PlanFragment())
+                .add(R.id.library_container, new LibraryFragment())
+                .add(R.id.profile_container, new ProfileFragment())
+                .commit();
         }
     }
 
@@ -104,8 +105,8 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-    public void navigateToWorkoutDetail(String name, int duration, ArrayList<Bundle> steps) {
-        WorkoutFragment fragment = WorkoutFragment.newInstance(name, duration, steps);
+    public void navigateToWorkoutDetail(String name, int duration, ArrayList<Bundle> steps, boolean isCompleted, String planId, int week, String dayKey) {
+        WorkoutFragment fragment = WorkoutFragment.newInstance(name, duration, steps, isCompleted, planId, week, dayKey);
         getSupportFragmentManager().beginTransaction()
                 .add(currentContainerId, fragment)
                 .addToBackStack(null)

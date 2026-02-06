@@ -14,7 +14,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="24dp">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -26,24 +28,15 @@
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:src="@android:drawable/ic_menu_revert"
                 android:rotation="180"
-                app:tint="@color/white" />
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="WORKOUT"
-                android:textColor="#94A3B8"
-                android:textStyle="bold"
-                android:layout_centerInParent="true"
-                android:textSize="14sp"
-                android:letterSpacing="0.1"/>
+                app:tint="@color/white"
+                android:layout_alignParentStart="true"/>
         </RelativeLayout>
 
         <TextView
             android:id="@+id/tv_workout_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="16dp"
             android:text="Loading..."
             android:textSize="32sp"
             android:textStyle="bold"
@@ -75,7 +68,8 @@
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/header_container">
+        android:layout_below="@id/header_container"
+        android:layout_above="@id/btn_complete_workout">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -103,6 +97,23 @@
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Complete Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_complete_workout"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="24dp"
+        android:text="Complete Workout"
+        android:textAllCaps="false"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#0F172A"
+        app:backgroundTint="#34D399"
+        app:cornerRadius="32dp"
+        app:icon="@android:drawable/checkbox_on_background"
+        app:iconTint="#0F172A" />
 
     <ProgressBar
         android:id="@+id/progressBar"
