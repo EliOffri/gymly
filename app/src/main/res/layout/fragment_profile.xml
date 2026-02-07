@@ -1,182 +1,203 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground">
+    android:background="#0F172A"
+    android:fillViewport="true">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
+        android:orientation="vertical"
+        android:padding="24dp">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Profile Header Card -->
         <LinearLayout
+            android:id="@+id/ll_profile_details"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:orientation="vertical"
-            android:padding="32dp">
+            android:gravity="center_horizontal">
 
             <com.google.android.material.card.MaterialCardView
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                app:cardBackgroundColor="?attr/colorPrimary"
-                app:cardCornerRadius="50dp"
-                app:cardElevation="0dp">
-
-                <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:cardCornerRadius="40dp"
+                app:cardBackgroundColor="#334155"
+                app:strokeWidth="0dp">
+                <TextView
+                    android:id="@+id/tv_profile_initial"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:padding="24dp"
-                    android:src="@drawable/ic_gymly_logo"
-                    app:tint="@android:color/white" />
+                    android:text="U"
+                    android:textColor="@color/white"
+                    android:textSize="32sp"
+                    android:textStyle="bold"
+                    android:gravity="center"/>
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/tv_profile_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:text="User Name"
-                android:textSize="24sp"
+                android:textColor="@color/white"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="?android:attr/textColorPrimary" />
+                android:layout_marginTop="12dp"/>
 
             <TextView
                 android:id="@+id/tv_profile_email"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="user@email.com"
-                android:textSize="14sp"
-                android:textColor="?android:attr/textColorSecondary" />
+                android:text="user@example.com"
+                android:textColor="#94A3B8"
+                android:textSize="14sp"/>
         </LinearLayout>
-    </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <TextView
+            android:id="@+id/tv_not_logged_in"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Please log in to view profile"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:visibility="gone"/>
 
+        <ProgressBar
+            android:id="@+id/progressBarProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+
+        <!-- Stats Grid -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="24dp"
-            android:paddingBottom="100dp">
-
+            android:orientation="horizontal"
+            android:layout_marginTop="32dp"
+            android:baselineAligned="false">
+            
             <LinearLayout
-                android:id="@+id/ll_profile_details"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:orientation="vertical"
-                android:visibility="gone">
-
-                <!-- Stats Section -->
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/tv_profile_level"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Beginner"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="FITNESS PROFILE"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
-                    android:layout_marginBottom="16dp"/>
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="24dp"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="#E2E8F0">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Current Level"
-                            android:textSize="12sp"
-                            android:textColor="?android:attr/textColorSecondary"/>
-                        <TextView
-                            android:id="@+id/tv_profile_level"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Intermediate"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="12dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Primary Goals"
-                            android:textSize="12sp"
-                            android:textColor="?android:attr/textColorSecondary"/>
-                        <TextView
-                            android:id="@+id/tv_profile_goals"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Strength, Endurance"
-                            android:textStyle="bold"
-                            android:layout_marginBottom="12dp"/>
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Equipment"
-                            android:textSize="12sp"
-                            android:textColor="?android:attr/textColorSecondary"/>
-                        <TextView
-                            android:id="@+id/tv_profile_equipment"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Dumbbells, Mat"
-                            android:textStyle="bold"/>
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_edit_profile"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:text="Edit Details"
-                    android:textAllCaps="false"
-                    app:cornerRadius="12dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_logout"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="8dp"
-                    android:text="Log out"
-                    android:textAllCaps="false"
-                    android:textColor="#EF4444"/>
+                    android:text="Level"
+                    android:textColor="#94A3B8"
+                    android:textSize="12sp"/>
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/tv_not_logged_in"
-                android:layout_width="match_parent"
+            <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#334155"/>
+
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Sign in to see your profile."
-                android:visibility="gone" />
-
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/tv_workout_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Workouts"
+                    android:textColor="#94A3B8"
+                    android:textSize="12sp"/>
+            </LinearLayout>
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
-    <ProgressBar
-        android:id="@+id/progressBarProfile"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone" />
+        <!-- Actions -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SETTINGS &amp; GOALS"
+            android:textColor="#94A3B8"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginTop="40dp"
+            android:letterSpacing="0.1"/>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_edit_profile"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="Edit Profile"
+            android:textColor="@color/white"
+            app:strokeColor="#334155"
+            app:icon="@android:drawable/ic_menu_edit"
+            app:iconTint="@color/white"
+            android:gravity="start|center_vertical"
+            android:textAlignment="viewStart"
+            android:paddingStart="16dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_create_new_plan"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:text="Create New Plan"
+            android:textColor="@color/white"
+            app:strokeColor="#334155"
+            app:icon="@android:drawable/ic_input_add"
+            app:iconTint="#34D399"
+            android:gravity="start|center_vertical"
+            android:textAlignment="viewStart"
+            android:paddingStart="16dp"/>
+
+        <TextView
+            android:id="@+id/tv_profile_goals"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+        <TextView
+            android:id="@+id/tv_profile_equipment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_logout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="48dp"
+            android:text="Log Out"
+            android:textColor="#EF4444"
+            app:backgroundTint="#1E293B"
+            app:cornerRadius="8dp"/>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

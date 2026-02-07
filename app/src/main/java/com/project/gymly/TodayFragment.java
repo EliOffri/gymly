@@ -61,12 +61,12 @@ public class TodayFragment extends Fragment {
 
     private String currentDayKey; 
     private boolean isCurrentWorkoutCompleted = false;
+    private boolean hasActivePlan = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Listen for results from WorkoutFragment
         getParentFragmentManager().setFragmentResultListener("workout_update", this, new FragmentResultListener() {
             @Override
             public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
@@ -115,8 +115,24 @@ public class TodayFragment extends Fragment {
         fetchActivePlanInfo(); 
     }
 
-    // Removed onResume re-fetch logic in favor of Fragment Result API
-    // This is cleaner and avoids network calls on every back press
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (hasActivePlan && currentPlanId != null && calendarRangeStart != null && selectedDayIndex != -1) {
+            Calendar cal = (Calendar) calendarRangeStart.clone();
+            cal.add(Calendar.DAY_OF_YEAR, selectedDayIndex);
+            String dayKey = new SimpleDateFormat("EEE", Locale.ENGLISH).format(cal.getTime()).toLowerCase();
+            fetchWorkoutForDay(dayKey);
+            
+            for (int i = 0; i < 7; i++) {
+                Calendar c = (Calendar) calendarRangeStart.clone();
+                c.add(Calendar.DAY_OF_YEAR, i);
+                String dk = new SimpleDateFormat("EEE", Locale.ENGLISH).format(c.getTime()).toLowerCase();
+                View dot = calendarStrip.getChildAt(i).findViewById(R.id.status_dot);
+                fetchDayStatus(dk, dot);
+            }
+        }
+    }
 
     private void setupUser() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -126,7 +142,8 @@ public class TodayFragment extends Fragment {
                 if (documentSnapshot.exists() && isAdded()) {
                     userName = documentSnapshot.getString("name");
                     if (userName == null || userName.isEmpty()) userName = "Athlete";
-                    tvMainTitle.setText("Rest up, " + userName);
+                    // Only update if resting, not creating plan
+                    if (hasActivePlan) tvMainTitle.setText("Rest up, " + userName);
                 }
             });
         }
@@ -141,6 +158,7 @@ public class TodayFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (!queryDocumentSnapshots.isEmpty()) {
+                        hasActivePlan = true;
                         List<DocumentSnapshot> docs = queryDocumentSnapshots.getDocuments();
                         docs.sort((d1, d2) -> {
                             Timestamp t1 = d1.getTimestamp("startDate");
@@ -163,19 +181,62 @@ public class TodayFragment extends Fragment {
                         updateWeekHeaderUI();
                         setupCalendar();
                     } else {
-                        selectedWeek = 1;
-                        totalPlanWeeks = 1;
-                        updateWeekHeaderUI();
-                        setupCalendar();
+                        hasActivePlan = false;
+                        showCreatePlanUI();
+                        // Even with no plan, setup generic calendar for visual
+                        setupGenericCalendar();
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error fetching active plan", e);
-                    setupCalendar();
+                    hasActivePlan = false;
+                    showCreatePlanUI();
+                    setupGenericCalendar();
                 });
     }
 
+    private void showCreatePlanUI() {
+        if (!isAdded()) return;
+        
+        llWeekSelector.setVisibility(View.INVISIBLE);
+        workoutSection.setVisibility(View.GONE);
+        restDayContainer.setVisibility(View.VISIBLE);
+        
+        tvMainTitle.setText("Welcome, " + userName);
+        tvSubtitle.setText("You don't have an active plan yet. Tap to create one!");
+        
+        restDayContainer.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.today_container, new CreatePlanFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+    }
+
+    // New method for calendar when no plan exists
+    private void setupGenericCalendar() {
+        Calendar cal = Calendar.getInstance();
+        // Snap to this week's Monday
+        cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        calendarRangeStart = (Calendar) cal.clone();
+        
+        // Select today
+        Calendar today = Calendar.getInstance();
+        // Simple day index logic (Mon=0...Sun=6)
+        // Check if today is in this week range
+        selectedDayIndex = (today.get(Calendar.DAY_OF_WEEK) + 5) % 7;
+
+        renderCalendarStrip();
+    }
+
     private void setupCalendar() {
+        if (!hasActivePlan) {
+            setupGenericCalendar();
+            return;
+        }
+        
+        llWeekSelector.setVisibility(View.VISIBLE);
+        
         Calendar cal = Calendar.getInstance();
         if (planStartDate != null) {
             cal.setTime(planStartDate.toDate());
@@ -196,6 +257,12 @@ public class TodayFragment extends Fragment {
             }
         }
 
+        renderCalendarStrip();
+    }
+
+    private void renderCalendarStrip() {
+        Calendar cal = (Calendar) calendarRangeStart.clone();
+
         for (int i = 0; i < calendarStrip.getChildCount(); i++) {
             final int index = i;
             View dayView = calendarStrip.getChildAt(i);
@@ -211,17 +278,19 @@ public class TodayFragment extends Fragment {
 
             updateDaySelectionUI(dayView, i == selectedDayIndex);
             
-            if (currentPlanId != null) {
+            if (hasActivePlan && currentPlanId != null) {
                 fetchDayStatus(dayKey, dot);
+            } else {
+                dot.setVisibility(View.INVISIBLE);
             }
 
             dayView.setOnClickListener(v -> {
                 updateSelectionUI(index);
                 selectedDayIndex = index; 
-                fetchWorkoutForDay(dayKey);
+                if (hasActivePlan) fetchWorkoutForDay(dayKey);
             });
 
-            if (i == selectedDayIndex) {
+            if (i == selectedDayIndex && hasActivePlan) {
                 fetchWorkoutForDay(dayKey);
             }
 
@@ -231,7 +300,10 @@ public class TodayFragment extends Fragment {
 
     private void fetchWorkoutForDay(String dayKey) {
         if (userId == null || currentPlanId == null) {
-            showRestDayUI();
+            // No plan? Ensure we show Create Plan UI, not rest UI
+            if (!hasActivePlan) {
+                showCreatePlanUI();
+            }
             return;
         }
         
@@ -292,6 +364,7 @@ public class TodayFragment extends Fragment {
         
         workoutSection.setVisibility(View.VISIBLE);
         restDayContainer.setVisibility(View.GONE);
+        restDayContainer.setOnClickListener(null); 
         
         Calendar cardCal = (Calendar) calendarRangeStart.clone();
         if (selectedDayIndex >= 0) {
@@ -355,7 +428,6 @@ public class TodayFragment extends Fragment {
                 currentDot.setBackgroundTintList(ColorStateList.valueOf(
                     Color.parseColor(isCompleted ? "#34D399" : "#F59E0B")
                 ));
-                currentDot.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -468,7 +540,15 @@ public class TodayFragment extends Fragment {
         if (!isAdded() || workoutSection == null || restDayContainer == null) return;
         workoutSection.setVisibility(View.GONE);
         restDayContainer.setVisibility(View.VISIBLE);
-        tvMainTitle.setText("Rest up, " + userName);
-        tvSubtitle.setText("Recovery fuels success, so enjoy the gift of a rest day!");
+        
+        if (hasActivePlan) {
+            tvMainTitle.setText("Rest up, " + userName);
+            tvSubtitle.setText("Recovery fuels success, so enjoy the gift of a rest day!");
+            restDayContainer.setOnClickListener(null);
+        } else {
+            // This fallback shouldn't theoretically happen if handled by showCreatePlanUI
+            // But just in case:
+            showCreatePlanUI();
+        }
     }
 }
