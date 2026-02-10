@@ -78,8 +78,6 @@
                 android:layout_marginStart="6dp"/>
         </LinearLayout>
 
-        <!-- Calendar Icon Removed -->
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Calendar Strip -->
@@ -129,22 +127,9 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold"/>
-                
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:gravity="center_vertical">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="24°"
-                        android:textColor="@color/white"
-                        android:layout_marginStart="4dp"/>
-                </LinearLayout>
             </RelativeLayout>
 
-            <!-- Workout Card -->
+            <!-- Active Workout Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/workout_section"
                 android:layout_width="match_parent"
@@ -220,33 +205,72 @@
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Rest Day View (Hidden when workout exists) -->
-            <LinearLayout
+            <!-- Create Plan / Rest Day Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/rest_day_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:paddingVertical="32dp">
-                <TextView
-                    android:id="@+id/tv_main_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Rest up, Eli"
-                    android:textSize="28sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/white"/>
+                android:visibility="gone"
+                app:cardBackgroundColor="#1E293B"
+                app:cardCornerRadius="16dp"
+                app:strokeWidth="0dp">
 
-                <TextView
-                    android:id="@+id/tv_subtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Recovery fuels success, so enjoy the gift of a rest day!"
-                    android:textSize="14sp"
-                    android:textColor="#94A3B8"
-                    android:textAlignment="center"
-                    android:layout_marginTop="8dp"/>
-            </LinearLayout>
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <View
+                        android:id="@+id/bar_gradient_rest"
+                        android:layout_width="12dp"
+                        android:layout_height="0dp"
+                        android:background="@drawable/workout_card_gradient"
+                        android:backgroundTint="#34D399" 
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp"
+                        app:layout_constraintStart_toEndOf="@id/bar_gradient_rest"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <TextView
+                            android:id="@+id/tv_main_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Start Your Journey"
+                            android:textColor="@color/white"
+                            android:textSize="20sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/tv_subtitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tap to create a personalized plan"
+                            android:textColor="#94A3B8"
+                            android:textSize="14sp"
+                            android:layout_marginTop="8dp"/>
+
+                    </LinearLayout>
+                    
+                    <ImageView
+                        android:id="@+id/btn_add_plan_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_margin="20dp"
+                        android:src="@android:drawable/ic_input_add"
+                        app:tint="#34D399"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <!-- Week Overview Card -->
             <com.google.android.material.card.MaterialCardView

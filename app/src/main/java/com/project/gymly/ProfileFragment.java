@@ -31,7 +31,7 @@ public class ProfileFragment extends Fragment {
     private TextView tvName, tvEmail, tvLevel, tvNotLoggedIn, tvInitial, tvWorkoutCount;
     private LinearLayout llProfileDetails;
     private ProgressBar progressBar;
-    private MaterialButton btnEditProfile, btnCreateNewPlan, btnLogout;
+    private MaterialButton btnEditProfile, btnLogout;
     private UserRepository userRepository;
     private FirebaseFirestore db;
     private ListenerRegistration statsListener;
@@ -62,12 +62,7 @@ public class ProfileFragment extends Fragment {
                     .commit();
         });
 
-        btnCreateNewPlan.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.profile_container, new CreatePlanFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+        // Create Plan button removed from here. It is now only accessible from TodayFragment if no plan exists.
 
         btnLogout.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
@@ -82,7 +77,7 @@ public class ProfileFragment extends Fragment {
         FirebaseUser currentUser = userRepository.getCurrentUser();
         if (currentUser != null) {
             fetchUserData(currentUser.getUid());
-            startStatsListener(currentUser.getUid()); // Use listener instead of get
+            startStatsListener(currentUser.getUid()); 
         } else {
             showNotLoggedInState();
         }
@@ -108,7 +103,6 @@ public class ProfileFragment extends Fragment {
         llProfileDetails = view.findViewById(R.id.ll_profile_details);
         progressBar = view.findViewById(R.id.progressBarProfile);
         btnEditProfile = view.findViewById(R.id.btn_edit_profile);
-        btnCreateNewPlan = view.findViewById(R.id.btn_create_new_plan);
         btnLogout = view.findViewById(R.id.btn_logout);
     }
 
@@ -142,7 +136,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void startStatsListener(String uid) {
-        if (statsListener != null) return; // Already listening
+        if (statsListener != null) return; 
 
         statsListener = db.collection("users").document(uid).collection("plans")
             .whereEqualTo("isActive", true)
@@ -155,7 +149,6 @@ public class ProfileFragment extends Fragment {
                 if (snapshots != null && !snapshots.isEmpty()) {
                     List<DocumentSnapshot> docs = snapshots.getDocuments();
                     
-                    // Sort locally
                     docs.sort((d1, d2) -> {
                         Timestamp t1 = d1.getTimestamp("startDate");
                         Timestamp t2 = d2.getTimestamp("startDate");

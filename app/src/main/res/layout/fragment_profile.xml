@@ -163,21 +163,6 @@
             android:textAlignment="viewStart"
             android:paddingStart="16dp"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_create_new_plan"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:layout_marginTop="12dp"
-            android:text="Create New Plan"
-            android:textColor="@color/white"
-            app:strokeColor="#334155"
-            app:icon="@android:drawable/ic_input_add"
-            app:iconTint="#34D399"
-            android:gravity="start|center_vertical"
-            android:textAlignment="viewStart"
-            android:paddingStart="16dp"/>
-
         <TextView
             android:id="@+id/tv_profile_goals"
             android:layout_width="wrap_content"

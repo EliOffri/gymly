@@ -43,7 +43,7 @@ public class TodayFragment extends Fragment {
     private TextView tvMainTitle, tvSubtitle, tvWeekHeader;
     private TextView tvWorkoutDateDuration, tvWorkoutTitleCard, tvWorkoutSubtitleCard;
     private View workoutSection, restDayContainer;
-    private ImageView btnCompleteWorkout; 
+    private ImageView btnCompleteWorkout, btnAddPlanIcon; 
     
     private FirebaseFirestore db;
     private String userId;
@@ -80,6 +80,11 @@ public class TodayFragment extends Fragment {
                 }
             }
         });
+        
+        // Listen for plan updates (e.g. deletion from PlanFragment)
+        getParentFragmentManager().setFragmentResultListener("plan_updated", this, (requestKey, result) -> {
+            fetchActivePlanInfo();
+        });
     }
 
     @Nullable
@@ -103,6 +108,7 @@ public class TodayFragment extends Fragment {
         
         workoutSection = view.findViewById(R.id.workout_section);
         restDayContainer = view.findViewById(R.id.rest_day_container);
+        btnAddPlanIcon = view.findViewById(R.id.btn_add_plan_icon);
         
         tvWorkoutDateDuration = view.findViewById(R.id.tv_workout_date_duration);
         tvWorkoutTitleCard = view.findViewById(R.id.tv_workout_title_card);
@@ -132,6 +138,10 @@ public class TodayFragment extends Fragment {
                 fetchDayStatus(dk, dot);
             }
         }
+    }
+
+    public void refresh() {
+        fetchActivePlanInfo();
     }
 
     private void setupUser() {
@@ -182,14 +192,15 @@ public class TodayFragment extends Fragment {
                         setupCalendar();
                     } else {
                         hasActivePlan = false;
+                        currentPlanId = null; // Ensure ID is cleared
                         showCreatePlanUI();
-                        // Even with no plan, setup generic calendar for visual
                         setupGenericCalendar();
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error fetching active plan", e);
                     hasActivePlan = false;
+                    currentPlanId = null;
                     showCreatePlanUI();
                     setupGenericCalendar();
                 });
@@ -201,6 +212,7 @@ public class TodayFragment extends Fragment {
         llWeekSelector.setVisibility(View.INVISIBLE);
         workoutSection.setVisibility(View.GONE);
         restDayContainer.setVisibility(View.VISIBLE);
+        if (btnAddPlanIcon != null) btnAddPlanIcon.setVisibility(View.VISIBLE);
         
         tvMainTitle.setText("Welcome, " + userName);
         tvSubtitle.setText("You don't have an active plan yet. Tap to create one!");
@@ -542,6 +554,7 @@ public class TodayFragment extends Fragment {
         restDayContainer.setVisibility(View.VISIBLE);
         
         if (hasActivePlan) {
+            if (btnAddPlanIcon != null) btnAddPlanIcon.setVisibility(View.GONE); // Hide + icon for Rest Day
             tvMainTitle.setText("Rest up, " + userName);
             tvSubtitle.setText("Recovery fuels success, so enjoy the gift of a rest day!");
             restDayContainer.setOnClickListener(null);

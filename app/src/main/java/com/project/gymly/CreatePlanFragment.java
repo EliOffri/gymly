@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.chip.Chip;
@@ -31,6 +32,7 @@ public class CreatePlanFragment extends Fragment {
     private Slider sliderDuration;
     private Button btnCreate;
     private ProgressBar progressBar;
+    private NestedScrollView nsvContent;
     private UserRepository userRepository;
 
     public CreatePlanFragment() {}
@@ -46,6 +48,7 @@ public class CreatePlanFragment extends Fragment {
 
         userRepository = UserRepository.getInstance();
 
+        nsvContent = view.findViewById(R.id.nsv_content);
         etPlanName = view.findViewById(R.id.et_plan_name);
         cgGoal = view.findViewById(R.id.cg_goal);
         cgLevel = view.findViewById(R.id.cg_level);
@@ -81,7 +84,6 @@ public class CreatePlanFragment extends Fragment {
 
         setLoading(true);
 
-        // Generate the plan structure
         Map<String, Object> planData = PlanGenerator.generate(planName, goal, level, durationWeeks, selectedDays);
         String userId = FirebaseAuth.getInstance().getUid();
 
@@ -89,16 +91,24 @@ public class CreatePlanFragment extends Fragment {
             userRepository.createCustomPlan(userId, planData, new UserRepository.UpdateCallback() {
                 @Override
                 public void onSuccess() {
+                    if (!isAdded()) return;
                     setLoading(false);
                     Toast.makeText(getContext(), "Plan created successfully!", Toast.LENGTH_SHORT).show();
+                    
+                    // Notify listeners that plan has been updated
+                    getParentFragmentManager().setFragmentResult("plan_updated", new Bundle());
+                    
                     if (getActivity() instanceof MainActivity) {
-                        // Go back to Today page to see the new plan
-                        ((MainActivity) getActivity()).onAuthSuccess(); 
+                        // Switch to Today tab cleanly
+                        ((MainActivity) getActivity()).setSelectedNavItem(R.id.nav_home);
                     }
+                    // Remove this fragment from backstack to reveal TodayFragment
+                    getParentFragmentManager().popBackStack();
                 }
 
                 @Override
                 public void onError(Exception e) {
+                    if (!isAdded()) return;
                     setLoading(false);
                     Toast.makeText(getContext(), "Failed to create plan: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -117,7 +127,6 @@ public class CreatePlanFragment extends Fragment {
 
     private List<String> getSelectedDays() {
         List<String> days = new ArrayList<>();
-        // Map chip text/IDs to backend keys (mon, tue, etc.)
         if (isChecked(R.id.chip_mon)) days.add("mon");
         if (isChecked(R.id.chip_tue)) days.add("tue");
         if (isChecked(R.id.chip_wed)) days.add("wed");
@@ -134,7 +143,7 @@ public class CreatePlanFragment extends Fragment {
     }
 
     private void setLoading(boolean loading) {
-        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
-        btnCreate.setEnabled(!loading);
+        if (progressBar != null) progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        if (nsvContent != null) nsvContent.setVisibility(loading ? View.GONE : View.VISIBLE);
     }
 }

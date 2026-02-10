@@ -128,6 +128,14 @@ public class UserRepository {
                 .addOnFailureListener(callback::onError);
     }
 
+    // Delete/End plan
+    public void deletePlan(String userId, String planId, final UpdateCallback callback) {
+        db.collection("users").document(userId).collection("plans").document(planId)
+                .delete()
+                .addOnSuccessListener(aVoid -> callback.onSuccess())
+                .addOnFailureListener(callback::onError);
+    }
+
     public FirebaseUser getCurrentUser() { return mAuth.getCurrentUser(); }
     public boolean isUserLoggedIn() { return mAuth.getCurrentUser() != null; }
     public void signOut() { mAuth.signOut(); }

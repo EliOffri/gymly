@@ -133,6 +133,13 @@ public class MainActivity extends AppCompatActivity {
         if (itemId == R.id.nav_home) {
             currentContainerId = R.id.today_container;
             todayCont.setVisibility(View.VISIBLE);
+            
+            // Force refresh of TodayFragment content
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.today_container);
+            if (fragment instanceof TodayFragment) {
+                ((TodayFragment) fragment).refresh();
+            }
+            
         } else if (itemId == R.id.nav_plan) {
             currentContainerId = R.id.plan_container;
             planCont.setVisibility(View.VISIBLE);

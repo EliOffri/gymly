@@ -44,16 +44,6 @@ public class WorkoutStepAdapter extends RecyclerView.Adapter<WorkoutStepAdapter.
 
         holder.tvNumber.setText(String.valueOf(position + 1));
         
-        if (exercise != null) {
-            holder.tvName.setText(exercise.getName());
-            holder.itemView.setAlpha(1.0f);
-            holder.itemView.setClickable(true);
-        } else {
-            holder.tvName.setText("Loading exercise...");
-            holder.itemView.setAlpha(0.5f);
-            holder.itemView.setClickable(false);
-        }
-        
         Object setsObj = step.get("sets");
         Object repsObj = step.get("reps");
         
@@ -65,9 +55,20 @@ public class WorkoutStepAdapter extends RecyclerView.Adapter<WorkoutStepAdapter.
         
         holder.tvDetails.setText(sets + " sets of " + reps + " reps");
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null && exercise != null) listener.onItemClick(exercise);
-        });
+        if (exercise != null) {
+            holder.tvName.setText(exercise.getName());
+            holder.itemView.setAlpha(1.0f);
+            holder.itemView.setClickable(true);
+            
+            holder.itemView.setOnClickListener(v -> {
+                if (listener != null) listener.onItemClick(exercise);
+            });
+        } else {
+            holder.tvName.setText("Loading exercise...");
+            holder.itemView.setAlpha(0.5f);
+            holder.itemView.setClickable(false);
+            holder.itemView.setOnClickListener(null);
+        }
     }
 
     @Override

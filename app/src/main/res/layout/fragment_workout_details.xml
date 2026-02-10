@@ -15,22 +15,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="16dp"
+        android:paddingTop="32dp"
         android:paddingBottom="24dp">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageButton
-                android:id="@+id/btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_revert"
-                android:rotation="180"
-                app:tint="@color/white"
-                android:layout_alignParentStart="true"/>
-        </RelativeLayout>
 
         <TextView
             android:id="@+id/tv_workout_title"

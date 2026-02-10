@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,7 +51,7 @@ public class WorkoutFragment extends Fragment {
     private TextView tvTitle, tvSummary;
     private RecyclerView rvExercises;
     private ProgressBar progressBar;
-    private ImageButton btnBack;
+    // Removed btnBack
     private MaterialButton btnComplete;
     private WorkoutStepAdapter adapter;
     private UserRepository userRepository;
@@ -120,19 +118,13 @@ public class WorkoutFragment extends Fragment {
         tvSummary = view.findViewById(R.id.tv_workout_summary);
         rvExercises = view.findViewById(R.id.rv_workout_exercises);
         progressBar = view.findViewById(R.id.progressBar);
-        btnBack = view.findViewById(R.id.btn_back);
+        // Removed btnBack binding
         btnComplete = view.findViewById(R.id.btn_complete_workout);
 
         if (tvTitle != null) tvTitle.setText(workoutName != null ? workoutName : "Workout");
         if (tvSummary != null) tvSummary.setText("Strength • " + duration + "m");
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                }
-            });
-        }
+        // Removed btnBack listener
         
         setupCompletionUI();
         setupRecyclerView();
@@ -195,8 +187,10 @@ public class WorkoutFragment extends Fragment {
     private void setupRecyclerView() {
         if (rvExercises == null) return;
         adapter = new WorkoutStepAdapter(stepsList, exerciseDetailsList, exercise -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getName());
+            if (getActivity() instanceof MainActivity && exercise != null) {
+                // Pass the ID instead of name to ensure consistent lookups
+                // ExerciseDetailFragment supports both ID and Name, but ID is safer
+                ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getId());
             }
         });
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -223,6 +217,9 @@ public class WorkoutFragment extends Fragment {
                 if (doc.exists()) {
                     Exercise ex = doc.toObject(Exercise.class);
                     if (ex != null && isAdded() && index < exerciseDetailsList.size()) {
+                        // Ensure ID is set in the object if not populated by Firestore
+                        if (ex.getId() == null) ex.setId(doc.getId());
+                        
                         exerciseDetailsList.set(index, ex);
                         if (adapter != null) adapter.notifyItemChanged(index);
                     }
