@@ -15,22 +15,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingHorizontal="24dp"
-        android:paddingTop="16dp"
+        android:paddingTop="32dp"
         android:paddingBottom="24dp">
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageButton
-                android:id="@+id/btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_revert"
-                android:rotation="180"
-                app:tint="@color/white"
-                android:layout_alignParentStart="true"/>
-        </RelativeLayout>
 
         <TextView
             android:id="@+id/tv_workout_title"
@@ -51,16 +37,92 @@
             android:textSize="16sp"
             android:textColor="#94A3B8" />
 
-        <!-- Simple Quick Actions -->
+        <!-- Stats Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="24dp">
-            <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/circle_white_bg" android:backgroundTint="#1E293B" android:layout_marginEnd="16dp"/>
-            <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/circle_white_bg" android:backgroundTint="#1E293B" android:layout_marginEnd="16dp"/>
-            <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/circle_white_bg" android:backgroundTint="#1E293B" android:layout_marginEnd="16dp"/>
-            <View android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/circle_white_bg" android:backgroundTint="#1E293B"/>
+            android:layout_marginTop="24dp"
+            android:baselineAligned="false">
+
+            <!-- Time Stat -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TIME"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#94A3B8"
+                    android:letterSpacing="0.1"/>
+                <TextView
+                    android:id="@+id/tv_stat_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--m"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+            <!-- Sets Stat -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SETS"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#94A3B8"
+                    android:letterSpacing="0.1"/>
+                <TextView
+                    android:id="@+id/tv_stat_sets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="--"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
+            <!-- Kcal Stat -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="BURN"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#94A3B8"
+                    android:letterSpacing="0.1"/>
+                <TextView
+                    android:id="@+id/tv_stat_kcal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="-- kcal"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    android:layout_marginTop="4dp"/>
+            </LinearLayout>
+
         </LinearLayout>
     </LinearLayout>
 

@@ -1,210 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#0F172A"
+    android:fillViewport="true">
 
-    <!-- Header -->
-    <RelativeLayout
-        android:id="@+id/registration_header"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:elevation="4dp"
-        android:background="?android:attr/windowBackground">
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Create Account"
-            android:textSize="22sp"
+            android:textColor="@color/white"
+            android:textSize="32sp"
             android:textStyle="bold"
-            android:layout_centerVertical="true"/>
-    </RelativeLayout>
+            android:layout_marginTop="32dp"/>
 
-    <ScrollView
-        android:id="@+id/registration_scroll_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/submit_container"
-        android:layout_below="@id/registration_header"
-        android:padding="16dp"
-        android:clipToPadding="false">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Join Gymly and start your journey"
+            android:textColor="#94A3B8"
+            android:textSize="16sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="32dp"/>
 
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_name"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="24dp">
+            android:hint="Full Name"
+            app:boxStrokeColor="#34D399"
+            app:hintTextColor="#34D399"
+            android:textColorHint="#94A3B8">
 
-            <!-- Name -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_name"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Name"
-                app:startIconDrawable="@android:drawable/ic_menu_edit"
-                app:errorEnabled="true">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPersonName"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                android:inputType="textPersonName"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Email -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_email"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_email"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Email"
+            app:boxStrokeColor="#34D399"
+            app:hintTextColor="#34D399"
+            android:textColorHint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Email"
-                android:layout_marginTop="8dp"
-                app:startIconDrawable="@android:drawable/ic_dialog_email"
-                app:errorEnabled="true">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_email"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                android:inputType="textEmailAddress"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Password -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_password"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_password"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Password"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="#94A3B8"
+            app:boxStrokeColor="#34D399"
+            app:hintTextColor="#34D399"
+            android:textColorHint="#94A3B8">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Password"
-                app:passwordToggleEnabled="true"
-                android:layout_marginTop="8dp"
-                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
-                app:errorEnabled="true">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_password"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="textPassword"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                android:inputType="textPassword"
+                android:textColor="@color/white"/>
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Level -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Fitness Level"
-                android:layout_marginTop="16dp"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"/>
-
-            <Spinner
-                android:id="@+id/spinner_level"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:minHeight="48dp" />
-
-            <!-- Goals -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Your Goals"
-                android:layout_marginTop="24dp"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"/>
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_goals"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
-                <com.google.android.material.chip.Chip id="@+id/chip_goal_weight_loss" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Weight Loss" />
-                <com.google.android.material.chip.Chip id="@+id/chip_goal_strength" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Strength" />
-                <com.google.android.material.chip.Chip id="@+id/chip_goal_flexibility" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Flexibility" />
-                <com.google.android.material.chip.Chip id="@+id/chip_goal_tone" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tone" />
-                <com.google.android.material.chip.Chip id="@+id/chip_goal_general_fitness" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="General Fitness" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <!-- Equipment -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Available Equipment"
-                android:layout_marginTop="24dp"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"/>
-
-            <com.google.android.material.chip.ChipGroup
-                android:id="@+id/chip_group_equipment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp">
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_dumbbells" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Dumbbells" />
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_bench" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bench" />
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_kettlebell" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Kettlebell" />
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_mat" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mat" />
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_treadmill" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Treadmill" />
-                <com.google.android.material.chip.Chip id="@+id/chip_eq_resistance_band" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Resistance Band" />
-            </com.google.android.material.chip.ChipGroup>
-
-            <!-- Schedule -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Workout Schedule"
-                android:layout_marginTop="24dp"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="?android:attr/textColorSecondary"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Select minutes available per day"
-                android:textSize="12sp"
-                android:layout_marginBottom="16dp"/>
-
-            <LinearLayout
-                android:id="@+id/schedule_container"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_sun" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_mon" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_tue" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_wed" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_thu" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_fri" />
-                <include layout="@layout/item_day_slider" android:id="@+id/layout_sat" />
-            </LinearLayout>
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- Bottom Submit Button Container -->
-    <FrameLayout
-        android:id="@+id/submit_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:padding="16dp"
-        android:elevation="8dp"
-        android:background="?android:attr/windowBackground">
-
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btn_register_submit"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:text="Submit Registration"
-            android:textSize="16sp"
-            app:cornerRadius="8dp"/>
+            android:layout_height="56dp"
+            android:layout_marginTop="32dp"
+            android:text="Sign Up"
+            android:backgroundTint="#34D399"
+            android:textColor="#0F172A"
+            android:textStyle="bold"
+            app:cornerRadius="28dp"/>
 
         <ProgressBar
             android:id="@+id/progress_bar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginTop="16dp"
             android:visibility="gone"/>
-    </FrameLayout>
 
-</RelativeLayout>
+    </LinearLayout>
+</ScrollView>

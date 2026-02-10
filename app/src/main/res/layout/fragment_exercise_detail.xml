@@ -48,17 +48,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
-                
-                <ImageButton
-                    android:id="@+id/btn_back"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?android:attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_revert"
-                    android:rotation="180"
-                    app:tint="@color/white" />
-            </androidx.appcompat.widget.Toolbar>
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>

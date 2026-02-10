@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.FrameLayout;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.project.gymly.data.UserRepository;
@@ -58,14 +59,16 @@ public class MainActivity extends AppCompatActivity {
         profileCont.setVisibility(View.GONE);
         
         FragmentManager fm = getSupportFragmentManager();
-        if (fm.findFragmentById(R.id.today_container) == null) {
-            fm.beginTransaction()
-                .add(R.id.today_container, new TodayFragment())
-                .add(R.id.plan_container, new PlanFragment())
-                .add(R.id.library_container, new LibraryFragment())
-                .add(R.id.profile_container, new ProfileFragment())
-                .commit();
-        }
+        // Clear back stack to avoid ghost fragments
+        fm.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+        
+        // Replace instead of Add to ensure fresh instances on re-login
+        fm.beginTransaction()
+            .replace(R.id.today_container, new TodayFragment())
+            .replace(R.id.plan_container, new PlanFragment())
+            .replace(R.id.library_container, new LibraryFragment())
+            .replace(R.id.profile_container, new ProfileFragment())
+            .commit();
     }
 
     private void setupAuthFlow() {
@@ -75,6 +78,12 @@ public class MainActivity extends AppCompatActivity {
         planCont.setVisibility(View.GONE);
         libraryCont.setVisibility(View.GONE);
         profileCont.setVisibility(View.GONE);
+        
+        // Clear main fragments on logout
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment today = fm.findFragmentById(R.id.today_container);
+        if (today != null) fm.beginTransaction().remove(today).commit();
+        
         getSupportFragmentManager().beginTransaction()
             .replace(R.id.auth_container, new LoginFragment()).commit();
     }
@@ -124,6 +133,13 @@ public class MainActivity extends AppCompatActivity {
         if (itemId == R.id.nav_home) {
             currentContainerId = R.id.today_container;
             todayCont.setVisibility(View.VISIBLE);
+            
+            // Force refresh of TodayFragment content
+            Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.today_container);
+            if (fragment instanceof TodayFragment) {
+                ((TodayFragment) fragment).refresh();
+            }
+            
         } else if (itemId == R.id.nav_plan) {
             currentContainerId = R.id.plan_container;
             planCont.setVisibility(View.VISIBLE);

@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,9 +49,9 @@ public class WorkoutFragment extends Fragment {
     private ArrayList<Bundle> stepBundles;
 
     private TextView tvTitle, tvSummary;
+    private TextView tvStatTime, tvStatSets, tvStatKcal;
     private RecyclerView rvExercises;
     private ProgressBar progressBar;
-    private ImageButton btnBack;
     private MaterialButton btnComplete;
     private WorkoutStepAdapter adapter;
     private UserRepository userRepository;
@@ -118,25 +116,48 @@ public class WorkoutFragment extends Fragment {
 
         tvTitle = view.findViewById(R.id.tv_workout_title);
         tvSummary = view.findViewById(R.id.tv_workout_summary);
+        
+        tvStatTime = view.findViewById(R.id.tv_stat_time);
+        tvStatSets = view.findViewById(R.id.tv_stat_sets);
+        tvStatKcal = view.findViewById(R.id.tv_stat_kcal);
+        
         rvExercises = view.findViewById(R.id.rv_workout_exercises);
         progressBar = view.findViewById(R.id.progressBar);
-        btnBack = view.findViewById(R.id.btn_back);
         btnComplete = view.findViewById(R.id.btn_complete_workout);
 
         if (tvTitle != null) tvTitle.setText(workoutName != null ? workoutName : "Workout");
         if (tvSummary != null) tvSummary.setText("Strength • " + duration + "m");
 
-        if (btnBack != null) {
-            btnBack.setOnClickListener(v -> {
-                if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager().popBackStack();
-                }
-            });
-        }
-        
+        populateStats();
         setupCompletionUI();
         setupRecyclerView();
         fetchExerciseDetails();
+    }
+
+    private void populateStats() {
+        // 1. Time
+        if (tvStatTime != null) {
+            tvStatTime.setText(duration + "m");
+        }
+
+        // 2. Sets
+        long totalSets = 0;
+        for (Map<String, Object> step : stepsList) {
+            Object setsObj = step.get("sets");
+            if (setsObj instanceof Number) {
+                totalSets += ((Number) setsObj).longValue();
+            }
+        }
+        if (tvStatSets != null) {
+            tvStatSets.setText(String.valueOf(totalSets));
+        }
+
+        // 3. Kcal
+        // Estimate: ~6 kcal/min for strength training
+        long kcal = duration * 6L;
+        if (tvStatKcal != null) {
+            tvStatKcal.setText(kcal + " kcal");
+        }
     }
 
     private void setupCompletionUI() {
@@ -166,17 +187,14 @@ public class WorkoutFragment extends Fragment {
             return;
         }
 
-        // 1. Update UI locally first
         isCompleted = true;
         setupCompletionUI();
 
-        // 2. Set Fragment Result to notify TodayFragment
         Bundle result = new Bundle();
         result.putBoolean("is_completed", true);
         result.putString("day_key", dayKey);
         getParentFragmentManager().setFragmentResult("workout_update", result);
 
-        // 3. Perform Network Update
         userRepository.completeWorkout(userId, planId, week, dayKey, true, new UserRepository.UpdateCallback() {
             @Override
             public void onSuccess() {
@@ -195,8 +213,8 @@ public class WorkoutFragment extends Fragment {
     private void setupRecyclerView() {
         if (rvExercises == null) return;
         adapter = new WorkoutStepAdapter(stepsList, exerciseDetailsList, exercise -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getName());
+            if (getActivity() instanceof MainActivity && exercise != null) {
+                ((MainActivity) getActivity()).navigateToExerciseDetail(exercise.getId());
             }
         });
         rvExercises.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -223,6 +241,7 @@ public class WorkoutFragment extends Fragment {
                 if (doc.exists()) {
                     Exercise ex = doc.toObject(Exercise.class);
                     if (ex != null && isAdded() && index < exerciseDetailsList.size()) {
+                        if (ex.getId() == null) ex.setId(doc.getId());
                         exerciseDetailsList.set(index, ex);
                         if (adapter != null) adapter.notifyItemChanged(index);
                     }

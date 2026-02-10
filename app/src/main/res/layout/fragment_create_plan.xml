@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F172A">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nsv_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Design Your Plan"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tell us about your goals and schedule"
+                android:textColor="#94A3B8"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Plan Name -->
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Plan Name"
+                app:boxStrokeColor="#34D399"
+                app:hintTextColor="#34D399"
+                android:textColorHint="#94A3B8">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_plan_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="My Custom Plan"
+                    android:textColor="@color/white"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Goal Selection -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PRIMARY GOAL"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:letterSpacing="0.1"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_goal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+                
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_strength"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Strength"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                    
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_muscle"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Build Muscle"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_fat_loss"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fat Loss"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Experience Level -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EXPERIENCE LEVEL"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:letterSpacing="0.1"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_level"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+                
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_beginner"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Beginner"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                    
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_intermediate"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Intermediate"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_advanced"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Advanced"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Duration -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DURATION (WEEKS)"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="24dp"
+                android:letterSpacing="0.1"/>
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/slider_duration"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="4"
+                android:valueTo="12"
+                android:stepSize="4"
+                android:value="4"
+                app:thumbColor="#34D399"
+                app:trackColorActive="#34D399"
+                app:trackColorInactive="#334155"
+                app:tickColorActive="#0F172A"
+                app:tickColorInactive="#94A3B8"/>
+
+            <!-- Schedule Days -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WORKOUT DAYS"
+                android:textColor="#94A3B8"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:letterSpacing="0.1"/>
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_days"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+                
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_mon"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Mon"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_tue"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tue"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_wed"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Wed"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_thu"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thu"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_fri"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fri"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sat"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sat"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_sun"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sun"
+                    android:textColor="@color/white"
+                    app:chipBackgroundColor="@color/bg_chip_selector"/>
+            </com.google.android.material.chip.ChipGroup>
+
+            <Button
+                android:id="@+id/btn_create_plan"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="48dp"
+                android:text="Build My Plan"
+                android:backgroundTint="#34D399"
+                android:textColor="#0F172A"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:cornerRadius="32dp"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+    
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+</FrameLayout>

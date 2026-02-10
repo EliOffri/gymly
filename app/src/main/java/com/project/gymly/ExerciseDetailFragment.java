@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.chip.Chip;
@@ -32,7 +33,7 @@ public class ExerciseDetailFragment extends Fragment {
     
     private TextView tvTitle, tvCategory, tvDescription;
     private ChipGroup cgEquipment;
-    private ImageButton btnBack;
+    private Toolbar toolbar;
     private WebView webViewVideo;
     private ProgressBar videoLoading;
     private FirebaseFirestore db;
@@ -72,17 +73,20 @@ public class ExerciseDetailFragment extends Fragment {
         tvCategory = view.findViewById(R.id.tv_exercise_category);
         tvDescription = view.findViewById(R.id.tv_exercise_description);
         cgEquipment = view.findViewById(R.id.cg_equipment);
-        btnBack = view.findViewById(R.id.btn_back);
         webViewVideo = view.findViewById(R.id.webview_video);
         videoLoading = view.findViewById(R.id.video_loading);
+        toolbar = view.findViewById(R.id.toolbar);
 
         setupWebView();
 
-        btnBack.setOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
+        if (toolbar != null) {
+            toolbar.setNavigationIcon(R.drawable.ic_arrow_back);
+            toolbar.setNavigationOnClickListener(v -> {
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
+            });
+        }
 
         if (exerciseName != null) {
             fetchExerciseDetails(exerciseName);
@@ -90,6 +94,8 @@ public class ExerciseDetailFragment extends Fragment {
     }
 
     private void setupWebView() {
+        if (webViewVideo == null) return;
+        
         WebSettings webSettings = webViewVideo.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
@@ -104,6 +110,8 @@ public class ExerciseDetailFragment extends Fragment {
     }
 
     private void loadVideo(String videoId) {
+        if (webViewVideo == null) return;
+
         if (videoId != null && !videoId.isEmpty() && !videoId.startsWith("http")) {
             // It's an ID, embed it
             String embedUrl = "https://www.youtube.com/embed/" + videoId + "?autoplay=0&rel=0";
@@ -132,7 +140,9 @@ public class ExerciseDetailFragment extends Fragment {
                             Exercise exercise = querySnapshot.getDocuments().get(0).toObject(Exercise.class);
                             if (exercise != null) displayExercise(exercise);
                         } else {
-                            Toast.makeText(getContext(), "Exercise not found", Toast.LENGTH_SHORT).show();
+                            if (getContext() != null) {
+                                Toast.makeText(getContext(), "Exercise not found", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     });
             }
@@ -140,12 +150,12 @@ public class ExerciseDetailFragment extends Fragment {
     }
 
     private void displayExercise(Exercise exercise) {
-        tvTitle.setText(exercise.getName());
+        if (tvTitle != null) tvTitle.setText(exercise.getName());
         
         String category = exercise.getMuscleGroup();
         int difficulty = exercise.getDifficulty();
         String difficultyStr = (difficulty == 1) ? "Beginner" : (difficulty == 2 ? "Intermediate" : "Advanced");
-        tvCategory.setText(difficultyStr + " • " + category);
+        if (tvCategory != null) tvCategory.setText(difficultyStr + " • " + category);
 
         StringBuilder content = new StringBuilder();
         if (exercise.getDescription() != null) {
@@ -154,24 +164,30 @@ public class ExerciseDetailFragment extends Fragment {
         if (exercise.getInstructions() != null) {
             content.append("Instructions:\n").append(exercise.getInstructions());
         }
-        tvDescription.setText(content.toString());
+        if (tvDescription != null) tvDescription.setText(content.toString());
 
-        cgEquipment.removeAllViews();
-        List<String> equipment = exercise.getEquipmentRequired();
-        if (equipment != null && !equipment.isEmpty()) {
-            for (String item : equipment) {
-                Chip chip = new Chip(getContext());
-                chip.setText(item);
-                chip.setClickable(false);
-                chip.setCheckable(false);
-                chip.setTextColor(getResources().getColor(android.R.color.white));
-                chip.setChipBackgroundColorResource(android.R.color.holo_blue_dark); 
-                cgEquipment.addView(chip);
+        if (cgEquipment != null) {
+            cgEquipment.removeAllViews();
+            List<String> equipment = exercise.getEquipmentRequired();
+            if (equipment != null && !equipment.isEmpty()) {
+                for (String item : equipment) {
+                    if (getContext() != null) {
+                        Chip chip = new Chip(getContext());
+                        chip.setText(item);
+                        chip.setClickable(false);
+                        chip.setCheckable(false);
+                        chip.setTextColor(getResources().getColor(android.R.color.white));
+                        chip.setChipBackgroundColorResource(android.R.color.holo_blue_dark);
+                        cgEquipment.addView(chip);
+                    }
+                }
+            } else {
+                if (getContext() != null) {
+                    Chip chip = new Chip(getContext());
+                    chip.setText("No Equipment");
+                    cgEquipment.addView(chip);
+                }
             }
-        } else {
-            Chip chip = new Chip(getContext());
-            chip.setText("No Equipment");
-            cgEquipment.addView(chip);
         }
         
         // Load the video

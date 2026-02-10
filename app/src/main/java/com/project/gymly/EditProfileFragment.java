@@ -5,41 +5,37 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.project.gymly.data.UserRepository;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class EditProfileFragment extends Fragment {
 
-    private AutoCompleteTextView levelAutoCompleteTextView;
-    private ChipGroup chipGroupGoals, chipGroupEquipment;
-    private Button btnSaveChanges;
+    private TextInputEditText etName;
+    private MaterialAutoCompleteTextView etLevel;
+    private Button btnSave;
+    private ProgressBar progressBar;
     private UserRepository userRepository;
     private String userId;
 
-    public EditProfileFragment() {
-        // Required empty public constructor
-    }
+    public EditProfileFragment() {}
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_edit_profile, container, false);
     }
 
@@ -48,121 +44,87 @@ public class EditProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         userRepository = UserRepository.getInstance();
+        etName = view.findViewById(R.id.et_edit_name);
+        etLevel = view.findViewById(R.id.et_edit_level);
+        btnSave = view.findViewById(R.id.btn_save_profile);
+        progressBar = view.findViewById(R.id.progressBar);
 
-        initViews(view);
         setupLevelDropdown();
 
-        FirebaseUser currentUser = userRepository.getCurrentUser();
-        if (currentUser != null) {
-            userId = currentUser.getUid();
-            fetchCurrentData(userId);
-        } else {
-            Toast.makeText(getContext(), "User not identified", Toast.LENGTH_SHORT).show();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            userId = user.getUid();
+            loadUserData();
         }
 
-        btnSaveChanges.setOnClickListener(v -> saveChanges());
-    }
-
-    private void initViews(View view) {
-        levelAutoCompleteTextView = view.findViewById(R.id.level_auto_complete_text_view);
-        chipGroupGoals = view.findViewById(R.id.chip_group_goals);
-        chipGroupEquipment = view.findViewById(R.id.chip_group_equipment);
-        btnSaveChanges = view.findViewById(R.id.btn_save_changes);
+        btnSave.setOnClickListener(v -> saveProfile());
     }
 
     private void setupLevelDropdown() {
-        String[] levels = new String[]{"Select Level", "Beginner", "Intermediate", "Advanced"};
+        String[] levels = new String[]{"Beginner", "Intermediate", "Advanced"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, levels);
-        levelAutoCompleteTextView.setAdapter(adapter);
+        etLevel.setAdapter(adapter);
     }
 
-    private void fetchCurrentData(String uid) {
-        userRepository.getUser(uid, new UserRepository.UserCallback() {
+    private void loadUserData() {
+        setLoading(true);
+        userRepository.getUser(userId, new UserRepository.UserCallback() {
             @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                if (documentSnapshot.exists()) {
-                    populateFields(documentSnapshot);
+            public void onSuccess(DocumentSnapshot document) {
+                setLoading(false);
+                if (document.exists()) {
+                    String name = document.getString("name");
+                    String level = document.getString("level");
+                    if (name != null) etName.setText(name);
+                    if (level != null) etLevel.setText(level, false); // false = no filtering
                 }
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(getContext(), "Error loading data", Toast.LENGTH_SHORT).show();
+                setLoading(false);
+                Toast.makeText(getContext(), "Failed to load profile", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void populateFields(DocumentSnapshot doc) {
-        String level = doc.getString("level");
-        if (level != null && !level.isEmpty()) {
-            levelAutoCompleteTextView.setText(level, false);
-        } else {
-            levelAutoCompleteTextView.setText("Select Level", false);
+    private void saveProfile() {
+        String name = etName.getText().toString().trim();
+        String level = etLevel.getText().toString().trim();
+
+        if (name.isEmpty()) {
+            etName.setError("Name required");
+            return;
         }
-
-
-        List<String> goals = (List<String>) doc.get("goals");
-        if (goals != null) {
-            for (int i = 0; i < chipGroupGoals.getChildCount(); i++) {
-                Chip chip = (Chip) chipGroupGoals.getChildAt(i);
-                if (goals.contains(chip.getText().toString().toLowerCase().replace(" ", "_"))) {
-                    chip.setChecked(true);
-                }
-            }
-        }
-
-        List<String> equipment = (List<String>) doc.get("equipment");
-        if (equipment != null) {
-            for (int i = 0; i < chipGroupEquipment.getChildCount(); i++) {
-                Chip chip = (Chip) chipGroupEquipment.getChildAt(i);
-                if (equipment.contains(chip.getText().toString().toLowerCase().replace(" ", "_"))) {
-                    chip.setChecked(true);
-                }
-            }
-        }
-    }
-
-    private void saveChanges() {
-        if (userId == null) return;
-
-        String level = levelAutoCompleteTextView.getText().toString();
-        if ("Select Level".equals(level)) {
-            Toast.makeText(getContext(), "Please select a valid fitness level.", Toast.LENGTH_SHORT).show();
+        
+        if (level.isEmpty()) {
+            etLevel.setError("Level required");
             return;
         }
 
-        List<String> goals = new ArrayList<>();
-        for (int i = 0; i < chipGroupGoals.getChildCount(); i++) {
-            Chip chip = (Chip) chipGroupGoals.getChildAt(i);
-            if (chip.isChecked()) {
-                goals.add(chip.getText().toString().toLowerCase().replace(" ", "_"));
-            }
-        }
-
-        List<String> equipment = new ArrayList<>();
-        for (int i = 0; i < chipGroupEquipment.getChildCount(); i++) {
-            Chip chip = (Chip) chipGroupEquipment.getChildAt(i);
-            if (chip.isChecked()) {
-                equipment.add(chip.getText().toString().toLowerCase().replace(" ", "_"));
-            }
-        }
-
+        setLoading(true);
         Map<String, Object> updates = new HashMap<>();
+        updates.put("name", name);
         updates.put("level", level);
-        updates.put("goals", goals);
-        updates.put("equipment", equipment);
 
         userRepository.updateUserProfile(userId, updates, new UserRepository.UpdateCallback() {
             @Override
             public void onSuccess() {
-                Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                setLoading(false);
+                Toast.makeText(getContext(), "Profile updated", Toast.LENGTH_SHORT).show();
                 getParentFragmentManager().popBackStack();
             }
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(getContext(), "Error updating profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                setLoading(false);
+                Toast.makeText(getContext(), "Failed to update", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setLoading(boolean loading) {
+        progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        btnSave.setEnabled(!loading);
     }
 }
