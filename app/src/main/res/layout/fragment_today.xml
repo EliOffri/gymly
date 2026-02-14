@@ -297,15 +297,10 @@
                             android:text="Week Overview"
                             android:textColor="@color/white"
                             android:textStyle="bold"/>
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:src="@android:drawable/ic_media_play"
-                            app:tint="@color/white"
-                            android:layout_alignParentEnd="true"/>
                     </RelativeLayout>
 
                     <LinearLayout
+                        android:id="@+id/ll_week_progress_bars"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
@@ -321,6 +316,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp">
                         <TextView
+                            android:id="@+id/tv_week_progress_text"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Workouts: 0/4"
@@ -347,38 +343,100 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     android:textStyle="bold"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="EXPAND >"
-                    android:textColor="#94A3B8"
-                    android:textSize="12sp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"/>
             </RelativeLayout>
 
-            <!-- Insight cards placeholder -->
+            <!-- Insight Cards -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:weightSum="2">
+                
+                <!-- Insight 1: Calories Burned -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_insight_1"
                     android:layout_width="0dp"
-                    android:layout_height="160dp"
+                    android:layout_height="140dp"
                     android:layout_weight="1"
                     android:layout_marginEnd="8dp"
                     app:cardBackgroundColor="#1E293B"
                     app:cardCornerRadius="16dp"
-                    app:strokeWidth="0dp"/>
+                    app:strokeWidth="0dp">
+                    
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+                        
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_fire"
+                            app:tint="#EF4444"/>
+                            
+                        <TextView
+                            android:id="@+id/tv_insight_1_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"
+                            android:layout_centerVertical="true"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Calories Burned"
+                            android:textSize="12sp"
+                            android:textColor="#94A3B8"
+                            android:layout_below="@id/tv_insight_1_value"
+                            android:layout_marginTop="4dp"/>
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Insight 2: Active Minutes -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/card_insight_2"
                     android:layout_width="0dp"
-                    android:layout_height="160dp"
+                    android:layout_height="140dp"
                     android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     app:cardBackgroundColor="#1E293B"
                     app:cardCornerRadius="16dp"
-                    app:strokeWidth="0dp"/>
+                    app:strokeWidth="0dp">
+                    
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="16dp">
+                        
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            app:tint="#F59E0B"/>
+                            
+                        <TextView
+                            android:id="@+id/tv_insight_2_value"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="32sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"
+                            android:layout_centerVertical="true"/>
+                            
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Active Minutes"
+                            android:textSize="12sp"
+                            android:textColor="#94A3B8"
+                            android:layout_below="@id/tv_insight_2_value"
+                            android:layout_marginTop="4dp"/>
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
         </LinearLayout>

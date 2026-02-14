@@ -34,15 +34,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 
 public class TodayFragment extends Fragment {
 
     private static final String TAG = "TodayFragment";
 
-    private LinearLayout calendarStrip, llWeekSelector;
-    private TextView tvMainTitle, tvSubtitle, tvWeekHeader;
+    private LinearLayout calendarStrip, llWeekSelector, llWeekProgressBars;
+    private TextView tvMainTitle, tvSubtitle, tvWeekHeader, tvWeekProgressText;
     private TextView tvWorkoutDateDuration, tvWorkoutTitleCard, tvWorkoutSubtitleCard;
-    private View workoutSection, restDayContainer;
+    private TextView tvProfileInitial; 
+    private TextView tvInsight1Value, tvInsight2Value;
+    private View workoutSection, restDayContainer, profileImageContainer; 
     private ImageView btnCompleteWorkout, btnAddPlanIcon; 
     
     private FirebaseFirestore db;
@@ -63,6 +66,14 @@ public class TodayFragment extends Fragment {
     private boolean isCurrentWorkoutCompleted = false;
     private boolean hasActivePlan = false;
 
+    private static final String[] REST_MESSAGES = {
+        "Recovery fuels success, so enjoy the gift of a rest day!",
+        "Muscles grow during rest, not just the workout. Relax today!",
+        "Recharge your batteries today to crush tomorrow's goals.",
+        "Take it easy! Your body needs time to rebuild and strengthen.",
+        "A well-deserved break for a stronger comeback."
+    };
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +88,8 @@ public class TodayFragment extends Fragment {
                     isCurrentWorkoutCompleted = completed;
                     updateCompletionUI(completed);
                     updateDotLocally(completed);
+                    // Refresh plan to update overview bars and insights
+                    fetchActivePlanInfo();
                 }
             }
         });
@@ -106,6 +119,10 @@ public class TodayFragment extends Fragment {
         tvSubtitle = view.findViewById(R.id.tv_subtitle);
         tvWeekHeader = view.findViewById(R.id.tv_week_header);
         
+        // New bindings for Profile Header
+        profileImageContainer = view.findViewById(R.id.profile_image_container);
+        tvProfileInitial = view.findViewById(R.id.tv_profile_initial);
+        
         workoutSection = view.findViewById(R.id.workout_section);
         restDayContainer = view.findViewById(R.id.rest_day_container);
         btnAddPlanIcon = view.findViewById(R.id.btn_add_plan_icon);
@@ -114,8 +131,25 @@ public class TodayFragment extends Fragment {
         tvWorkoutTitleCard = view.findViewById(R.id.tv_workout_title_card);
         tvWorkoutSubtitleCard = view.findViewById(R.id.tv_workout_subtitle_card);
         btnCompleteWorkout = view.findViewById(R.id.btn_complete_workout);
+        
+        // Week Overview Bindings
+        llWeekProgressBars = view.findViewById(R.id.ll_week_progress_bars);
+        tvWeekProgressText = view.findViewById(R.id.tv_week_progress_text);
+
+        // Insight Bindings
+        tvInsight1Value = view.findViewById(R.id.tv_insight_1_value);
+        tvInsight2Value = view.findViewById(R.id.tv_insight_2_value);
 
         llWeekSelector.setOnClickListener(this::showWeekSelectionMenu);
+        
+        // Profile Navigation
+        if (profileImageContainer != null) {
+            profileImageContainer.setOnClickListener(v -> {
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).setSelectedNavItem(R.id.nav_profile);
+                }
+            });
+        }
 
         setupUser();
         fetchActivePlanInfo(); 
@@ -152,8 +186,15 @@ public class TodayFragment extends Fragment {
                 if (documentSnapshot.exists() && isAdded()) {
                     userName = documentSnapshot.getString("name");
                     if (userName == null || userName.isEmpty()) userName = "Athlete";
-                    // Only update if resting, not creating plan
+                    
+                    // Update Main Title if needed
                     if (hasActivePlan) tvMainTitle.setText("Rest up, " + userName);
+                    
+                    // Update Profile Initial
+                    if (tvProfileInitial != null && !userName.isEmpty()) {
+                        String initial = String.valueOf(userName.charAt(0)).toUpperCase();
+                        tvProfileInitial.setText(initial);
+                    }
                 }
             });
         }
@@ -190,11 +231,21 @@ public class TodayFragment extends Fragment {
                         
                         updateWeekHeaderUI();
                         setupCalendar();
+                        
+                        // Update Week Overview
+                        Map<String, Object> schedule = (Map<String, Object>) planDoc.get("schedule");
+                        updateWeekOverview(schedule, selectedWeek);
+                        
+                        // Calculate Insights based on Selected Week
+                        calculateInsights(planDoc, selectedWeek);
+                        
                     } else {
                         hasActivePlan = false;
-                        currentPlanId = null; // Ensure ID is cleared
+                        currentPlanId = null; 
                         showCreatePlanUI();
                         setupGenericCalendar();
+                        updateWeekOverview(null, 0); 
+                        calculateInsights(null, 0); // Reset insights
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -203,7 +254,95 @@ public class TodayFragment extends Fragment {
                     currentPlanId = null;
                     showCreatePlanUI();
                     setupGenericCalendar();
+                    updateWeekOverview(null, 0);
+                    calculateInsights(null, 0);
                 });
+    }
+
+    private void calculateInsights(DocumentSnapshot planDoc, int week) {
+        if (planDoc == null) {
+            if (tvInsight1Value != null) tvInsight1Value.setText("0");
+            if (tvInsight2Value != null) tvInsight2Value.setText("0");
+            return;
+        }
+        
+        Map<String, Object> schedule = (Map<String, Object>) planDoc.get("schedule");
+        if (schedule == null) return;
+        
+        int caloriesBurned = 0;
+        int activeMinutes = 0;
+        
+        // Only calculate for the selected week
+        Object weekObj = schedule.get(String.valueOf(week));
+        if (weekObj instanceof Map) {
+            Map<String, Object> weekData = (Map<String, Object>) weekObj;
+            for (Object workoutObj : weekData.values()) {
+                if (workoutObj instanceof Map) {
+                    Map<String, Object> workout = (Map<String, Object>) workoutObj;
+                    if (Boolean.TRUE.equals(workout.get("isCompleted"))) {
+                        Object durationObj = workout.get("duration");
+                        if (durationObj instanceof Number) {
+                            int duration = ((Number) durationObj).intValue();
+                            activeMinutes += duration;
+                            caloriesBurned += duration * 6; // Approx 6 kcal/min
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (tvInsight1Value != null) tvInsight1Value.setText(String.valueOf(caloriesBurned));
+        if (tvInsight2Value != null) tvInsight2Value.setText(String.valueOf(activeMinutes));
+    }
+
+    private void updateWeekOverview(Map<String, Object> schedule, int week) {
+        if (llWeekProgressBars == null || tvWeekProgressText == null) return;
+
+        int totalWorkouts = 0;
+        int completedWorkouts = 0;
+
+        if (schedule != null) {
+            Object weekObj = schedule.get(String.valueOf(week));
+            if (weekObj instanceof Map) {
+                Map<String, Object> weekData = (Map<String, Object>) weekObj;
+                totalWorkouts = weekData.size();
+                for (Object workoutObj : weekData.values()) {
+                    if (workoutObj instanceof Map) {
+                        Map<String, Object> workout = (Map<String, Object>) workoutObj;
+                        if (Boolean.TRUE.equals(workout.get("isCompleted"))) {
+                            completedWorkouts++;
+                        }
+                    }
+                }
+            }
+        }
+
+        tvWeekProgressText.setText("Workouts: " + completedWorkouts + "/" + totalWorkouts);
+
+        // Rebuild bars
+        llWeekProgressBars.removeAllViews();
+        if (totalWorkouts > 0) {
+            for (int i = 0; i < totalWorkouts; i++) {
+                View bar = new View(getContext());
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, 10, 1.0f); // Height 4dp approx
+                if (i < totalWorkouts - 1) params.setMarginEnd(8);
+                bar.setLayoutParams(params);
+                
+                if (i < completedWorkouts) {
+                    bar.setBackgroundColor(Color.parseColor("#34D399")); // Green
+                } else {
+                    bar.setBackgroundColor(Color.parseColor("#334155")); // Gray
+                }
+                llWeekProgressBars.addView(bar);
+            }
+        } else {
+            // Default placeholder if no workouts (or no plan)
+             View bar = new View(getContext());
+             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 10);
+             bar.setLayoutParams(params);
+             bar.setBackgroundColor(Color.parseColor("#334155"));
+             llWeekProgressBars.addView(bar);
+        }
     }
 
     private void showCreatePlanUI() {
@@ -405,6 +544,8 @@ public class TodayFragment extends Fragment {
                     @Override
                     public void onSuccess() {
                         Log.d(TAG, "Workout status saved.");
+                        // Refresh plan info to update progress bars immediately
+                        fetchActivePlanInfo();
                     }
 
                     @Override
@@ -507,6 +648,10 @@ public class TodayFragment extends Fragment {
             selectedWeek = position + 1;
             updateWeekHeaderUI();
             setupCalendar();
+            
+            // Also refresh overview for the new week
+            fetchActivePlanInfo();
+            
             listPopupWindow.dismiss();
         });
         listPopupWindow.show();
@@ -556,7 +701,11 @@ public class TodayFragment extends Fragment {
         if (hasActivePlan) {
             if (btnAddPlanIcon != null) btnAddPlanIcon.setVisibility(View.GONE); // Hide + icon for Rest Day
             tvMainTitle.setText("Rest up, " + userName);
-            tvSubtitle.setText("Recovery fuels success, so enjoy the gift of a rest day!");
+            
+            // Pick a random message
+            int index = new Random().nextInt(REST_MESSAGES.length);
+            tvSubtitle.setText(REST_MESSAGES[index]);
+            
             restDayContainer.setOnClickListener(null);
         } else {
             // This fallback shouldn't theoretically happen if handled by showCreatePlanUI
